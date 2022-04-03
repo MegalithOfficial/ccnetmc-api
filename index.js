@@ -1,12 +1,13 @@
 var fetch = require("node-fetch"),
     striptags = require("striptags"),
     fn = require("./functions"),
+    // @ts-ignore
     Minecraft = require("minecraft-lib")
 
 //#region Data Functions
 async function getServerData()
 {
-    let serverData = await Minecraft.servers.get("play.earthmc.net").catch(err => { return err }),
+    let serverData = await Minecraft.servers.get("play.ccnetmc.com").catch(err => { return err }),
         emcData = {}
 
     if (!serverData || !serverData.players)
@@ -14,13 +15,13 @@ async function getServerData()
         emcData["serverOnline"] = false
         emcData["online"] = 0
         emcData["max"] = 0
+
+        return emcData
     }
-    else
-    {
+
         emcData["serverOnline"] = true
         emcData["online"] = serverData.players.online
         emcData["max"] = serverData.players.max
-    }
 
     return emcData
 }
@@ -28,45 +29,47 @@ async function getServerData()
 async function getServerInfo()
 {
     let serverData = await getServerData(),
-        playerData = await getPlayerData()
-
-    info = serverData
+        playerData = await getPlayerData(),
+        info = serverData
 
     if (playerData != null)
     {
-        info["towny"] = playerData.currentcount
+        info["nations"] = playerData.currentcount
         info["storming"] = playerData.hasStorm
         info["thundering"] = playerData.isThundering
     }
         
-    if (info["online"] == 0 || !info["online"]) info["queue"] = 0
-    else info["queue"] = info["online"] - info["towny"]
+    //if (info["online"] == 0 || !info["online"]) info["queue"] = 0
+   // else info["queue"] = info["online"] - info["servers"]
 
     return info
 }
 
 async function getPlayerData()
 {
-    let playerData = await fetch("https://earthmc.net/map/up/world/earth/").then(response => response.json()).catch(err => {})  
-
+    // @ts-ignore
+    let playerData = await fetch("https://map.ccnetmc.com/nationsmap/standalone/dynmap_world.json").then(response => response.json()).catch(err => {})
     if (!playerData || !playerData.players) return
-    else return playerData
+
+    return playerData
 }
 
 async function getOnlinePlayerData()
 {
     let playerData = await getPlayerData() 
-
     if (!playerData || !playerData.players) return
-    else return fn.editPlayerProps(playerData.players)
+
+    return fn.editPlayerProps(playerData.players)
 }
 
 async function getMapData()
 {
-    let mapData = await fetch("https://earthmc.net/map/tiles/_markers_/marker_earth.json").then(response => response.json()).catch(err => {})   
+    // @ts-ignore
+    let mapData = await fetch("https://map.ccnetmc.com/nationsmap/tiles/_markers_/marker_world.json").then(response => response.json()).catch(err => {})
 
     if (!mapData) return
-    else return mapData
+
+    return mapData
 }
 //#endregion
 
@@ -74,9 +77,7 @@ async function getMapData()
 async function getTown(townNameInput)
 {
     let towns = await getTowns()
-    if (!towns) return
-
-    let foundTown = towns.find(town => town.name.toLowerCase() == townNameInput.toLowerCase())
+        foundTown = towns.find(town => town.name.toLowerCase() == townNameInput.toLowerCase())
 
     if (!foundTown) return "That town does not exist!"
     else return foundTown
@@ -85,37 +86,33 @@ async function getTown(townNameInput)
 async function getTowns()
 {
     let mapData = await getMapData(),
-        ops = await getOnlinePlayerData(),
-        townsArray = [], townsArrayNoDuplicates = []
+        ops = await getOnlinePlayerData()
 
     if (!mapData || !ops) return
+    if (!mapData.sets["towny.markerset"]) return
 
-    if (mapData.sets["townyPlugin.markerset"] != null || mapData.sets["townyPlugin.markerset"] != undefined)
-    {
-        var townData = mapData.sets["townyPlugin.markerset"].areas
-    }
-
-    let townAreaNames = Object.keys(townData)
+    var townsArray = [],
+        townsArrayNoDuplicates = [],
+        townData = mapData.sets["towny.markerset"].areas,
+        townAreaNames = Object.keys(townData)
 
     for (let i = 0; i < townAreaNames.length; i++)
     {      
-        let town = townData[townAreaNames[i]]
-        let rawinfo = town.desc.split("<br />")
+        let town = townData[townAreaNames[i]],
+            rawinfo = town.desc.split("<br />")
+
         var info = []
 
-        rawinfo.forEach(x => 
-        {
-            info.push(striptags(x)) // Strips html tags from town desc
-        })
+        rawinfo.forEach(x => { info.push(striptags(x)) })
 
-        var townName = info[0].split(" (")[0].trim()          
+        var townName = info[1].split(" (")[0].trim()
         if (townName.endsWith("(Shop)")) continue
       
-        var mayor = info[1].slice(7)
+        var mayor = info[3].slice(9).replace(" ", "")
         if (mayor == "") continue
         
-        var nationName = info[0].split(" (")[1].slice(0, -1) == "" ? "No Nation" : info[0].split(" (")[1].slice(0, -1).trim(),
-            residents = info[2].slice(9).split(", ")
+         var nationName = info[0].slice(10).trim()//.split(" (")[1].slice(0, -1) == "" ? "No Nation" : info[2].split(" (")[1].slice(0, -1).trim(),
+            residents = info[12].slice(19).trim().split(", ")
 
         let currentTown = 
         {
@@ -124,15 +121,10 @@ async function getTowns()
             z: Math.round((Math.max(...town.z) + Math.min(...town.z)) / 2),
             name: fn.removeStyleCharacters(townName),
             nation: fn.removeStyleCharacters(nationName),
-            mayor: info[1].slice(7),
+            mayor: info[3].slice(9).replace(" ", ""),
             residents: residents,
             onlineResidents: ops.filter(op => residents.find(resident => resident == op.name)),
-            pvp: info[5].slice(5) == "true" ? true : false,
-            mobs:info[6].slice(6) == "true" ? true : false,
-            public: info[7].slice(8) == "true" ? true : false,
-            explosion: info[8].slice(11) == "true" ? true : false,
-            fire: info[9].slice(6) == "true" ? true : false,
-            capital: info[10].slice(9) == "true" ? true : false
+            capital: info[0].includes("Capital")
         }
         
         townsArray.push(currentTown)
@@ -167,7 +159,7 @@ async function getTowns()
             
               this[a.name] = 
               { 
-                  name: a.name, 
+                  name: a.name,
                   nation: a.nation,
                   residents: a.residents,
                   nationResidents: fn.removeDuplicates(nationResidents),
@@ -185,10 +177,7 @@ async function getTowns()
 
               townsArrayNoDuplicates.push(this[a.name])
           }
-          else
-          {                         
-              this[a.name].area += a.area
-          }
+          else this[a.name].area += a.area
     }, Object.create(null))
 
     return townsArrayNoDuplicates
@@ -238,9 +227,7 @@ async function getNations()
 
             // If the nation name is equal to the current towns nation
             if (this[town.nation].name == town.nation)
-            {
                 this[town.nation].towns.push(town.name) // Push it to nation towns
-            }
 
             if (town.capital) 
             {
@@ -261,6 +248,7 @@ async function getOnlinePlayer(playerNameInput)
   else if (!isNaN(playerNameInput)) throw { name: "INVALID_PLAYER_TYPE", message: "Player cannot be an integer." }
 
   var ops = await getOnlinePlayers(true)
+  if (!ops) throw { name: "FETCH_ERROR", message: "Error fetching data, please try again." }
 
   let foundPlayer = ops.find(op => op.name.toLowerCase() == playerNameInput.toLowerCase())
   if (!foundPlayer) throw { name: "INVALID_PLAYER", message: "That player is offline or does not exist!" }
@@ -274,8 +262,10 @@ async function getOnlinePlayers(includeResidentInfo)
     
     if (!includeResidentInfo) return onlinePlayers
 
-    let residents = await getResidents(),
-        merged = []
+    let residents = await getResidents()
+    if (!residents) return
+
+    let merged = []
     
     for (let i = 0; i < onlinePlayers.length; i++) 
     {
@@ -292,6 +282,9 @@ async function getOnlinePlayers(includeResidentInfo)
 async function getResident(residentNameInput)
 {
     let residents = await getResidents(),
+        foundResident = {}
+
+    if (!residents)
         foundResident = residents.find(resident => resident.name.toLowerCase() == residentNameInput.toLowerCase())
 
     if (!foundResident) throw { name: "INVALID_RESIDENT", message: "That resident does not exist!" }
@@ -300,8 +293,12 @@ async function getResident(residentNameInput)
 
 async function getResidents()
 {
-    let towns = await getTowns(),
-        residentsArray = []
+    let towns = await getTowns()
+    if (!towns) return
+
+    let residentsArray = []
+
+    if (!towns) return
 
     for (let i = 0; i < towns.length; i++)
     {
@@ -316,7 +313,7 @@ async function getResidents()
             else if (currentTown.mayor == currentResident) rank = "Mayor"
             else rank = "Resident"
 
-            let resident = 
+            let resident =
             {
                 name: currentResident,
                 town: currentTown.name,
@@ -333,8 +330,10 @@ async function getResidents()
 
 async function getAllPlayers()
 {
-    var onlinePlayers = await getOnlinePlayerData()
+    var onlinePlayers = await getOnlinePlayerData(),
         residents = await getResidents()
+
+    if (!onlinePlayers || !residents) return
 
     let merged = []
     
@@ -364,7 +363,7 @@ async function getTownless()
     if (!onlinePlayers || !mapData) return
 
     var allTowns = [], allResidents = []
-    var townData = mapData.sets["townyPlugin.markerset"].areas
+    var townData = mapData.sets["towny.markerset"].areas
     let townAreaNames = Object.keys(townData)
     
     for (let i = 0; i < townAreaNames.length; i++)
@@ -378,13 +377,13 @@ async function getTownless()
             info.push(striptags(x)) // Strips html tags from town desc
         })
 
-        var name = info[0].split(" (")[0].replace(/_/gi, " ").trim()
-        if (name.endsWith("(Shop)")) continue
+        var name = info[1]//.split(" (")[0].replace(/_/gi, " ").trim()
+        /*if (name.endsWith("(Shop)")) */continue
                 
-        var mayor = info[1].slice(7)
+        var mayor = info[3].slice(9)
         if (mayor == "") continue
         
-        let residents = info[2].slice(9).split(", ")
+        let residents = info[12].slice(19).replace(" ", "").split(", ")
 
         allTowns.push(residents)
     }
@@ -458,6 +457,7 @@ async function getNearbyPlayers(xInput, zInput, xRadius, zRadius)
 async function getNearbyTowns(xInput, zInput, xRadius, zRadius)
 {
     let towns = await getTowns()
+    if (!towns) return
 
     return towns.filter(t => 
     {            
@@ -469,6 +469,7 @@ async function getNearbyTowns(xInput, zInput, xRadius, zRadius)
 async function getNearbyNations(xInput, zInput, xRadius, zRadius)
 {
     let nations = await getNations()
+    if (!nations) return
 
     return nations.filter(n => 
     {            
