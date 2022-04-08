@@ -162,7 +162,7 @@ async function getTowns()
                   name: a.name,
                   nation: a.nation,
                   residents: a.residents,
-                  nationResidents: fn.removeDuplicates(nationResidents),
+                  //nationResidents: fn.removeDuplicates(nationResidents),
                   area: a.area,
                   mayor: a.mayor,
                   pvp: a.pvp,
