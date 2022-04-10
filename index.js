@@ -124,7 +124,9 @@ async function getTowns()
             mayor: info[3].slice(9).replace(" ", ""),
             residents: residents,
             onlineResidents: ops.filter(op => residents.find(resident => resident == op.name)),
-            capital: info[0].includes("Capital")
+            capital: info[0].includes("Capital"),
+            bank: info[8].slice(9).trim(),
+            upkeep: info[9].slice(11).trim()
         }
         
         townsArray.push(currentTown)
@@ -172,7 +174,9 @@ async function getTowns()
                   fire: a.fire,
                   capital: a.capital,
                   x: a.x,
-                  z: a.z
+                  z: a.z,
+                  bank: a.bank,
+                  upkeep: a.upkeep
               }    
 
               townsArrayNoDuplicates.push(this[a.name])
@@ -309,9 +313,9 @@ async function getResidents()
         {
             var currentResident = currentTown.residents[i]
 
-            if (currentTown.capital && currentTown.mayor == currentResident) rank = "Nation Leader"
-            else if (currentTown.mayor == currentResident) rank = "Mayor"
-            else rank = "Resident"
+           // if (currentTown.capital && currentTown.mayor == currentResident) rank = "Nation Leader"
+           // else if (currentTown.mayor == currentResident) rank = "Mayor"
+           // else rank = "Resident"
 
             let resident =
             {
@@ -377,13 +381,13 @@ async function getTownless()
             info.push(striptags(x)) // Strips html tags from town desc
         })
 
-        var name = info[1]//.split(" (")[0].replace(/_/gi, " ").trim()
-        /*if (name.endsWith("(Shop)")) */continue
+        var name = info[1].split(" (")[0].replace(/_/gi, " ").trim()
+        if (name.endsWith("(Shop)")) continue
                 
         var mayor = info[3].slice(9)
         if (mayor == "") continue
         
-        let residents = info[12].slice(19).replace(" ", "").split(", ")
+        let residents = info[12].slice(19).split(", ")
 
         allTowns.push(residents)
     }
