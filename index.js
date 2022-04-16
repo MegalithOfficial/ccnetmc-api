@@ -126,7 +126,8 @@ async function getTowns()
             onlineResidents: ops.filter(op => residents.find(resident => resident == op.name)),
             capital: info[0].includes("Capital"),
             bank: info[8].slice(9).trim(),
-            upkeep: info[9].slice(11).trim()
+            upkeep: info[9].slice(11).trim(),
+            peacefulness: info[5].slice(12).trim() == "true" ? true : false
         }
         
         townsArray.push(currentTown)
@@ -176,7 +177,8 @@ async function getTowns()
                   x: a.x,
                   z: a.z,
                   bank: a.bank,
-                  upkeep: a.upkeep
+                  upkeep: a.upkeep,
+                  peacefulness: a.peacefulness
               }    
 
               townsArrayNoDuplicates.push(this[a.name])
