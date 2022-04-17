@@ -30,17 +30,20 @@ async function getServerInfo()
 {
     let serverData = await getServerData(),
         playerData = await getPlayerData(),
+        townyPlayerData = await getTownyPlayerData(),
         info = serverData
 
     if (playerData != null)
     {
+        info["towny"] = townyPlayerData.currentcount
         info["nations"] = playerData.currentcount
         info["storming"] = playerData.hasStorm
         info["thundering"] = playerData.isThundering
+        info["ccnet"] = info["towny"] + info["nations"]
     }
         
-    //if (info["online"] == 0 || !info["online"]) info["queue"] = 0
-   // else info["queue"] = info["online"] - info["servers"]
+    if (info["online"] == 0 || !info["online"]) info["hub"] = 0
+    else info["hub"] = info["online"] - info["ccnet"]
 
     return info
 }
@@ -52,6 +55,14 @@ async function getPlayerData()
     if (!playerData || !playerData.players) return
 
     return playerData
+}
+
+async function getTownyPlayerData()
+{
+    let townyPlayerData = await fetch("https://map.ccnetmc.com/townymap/standalone/dynmap_world.json").then(response => response.json()).catch(err => {})
+    if (!townyPlayerData || !townyPlayerData.players) return
+
+    return townyPlayerData
 }
 
 async function getOnlinePlayerData()
