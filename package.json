@@ -1,6 +1,6 @@
 {
   "name": "ccnetmc",
-  "version": "1.5.5",
+  "version": "1.5.6",
   "description": "A test to demonstrate a public ccnet api",
   "main": "index.js",
   "dependencies": {

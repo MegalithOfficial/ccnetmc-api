@@ -138,7 +138,11 @@ async function getTowns()
             capital: info[0].includes("Capital"),
             bank: info[8].slice(9).trim(),
             upkeep: info[9].slice(11).trim(),
-            peacefulness: info[5].slice(12).trim() == "true" ? true : false
+            peacefulness: info[5].slice(12).trim() == "true" ? true : false,
+            colourCodes: {
+                fill: town.fillcolor,
+                outline: town.color
+            }
         }
         
         townsArray.push(currentTown)
@@ -189,7 +193,8 @@ async function getTowns()
                   z: a.z,
                   bank: a.bank,
                   upkeep: a.upkeep,
-                  peacefulness: a.peacefulness
+                  peacefulness: a.peacefulness,
+                  colourCodes: a.colourCodes
               }    
 
               townsArrayNoDuplicates.push(this[a.name])
