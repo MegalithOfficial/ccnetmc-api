@@ -205,6 +205,45 @@ async function getTowns()
     return townsArrayNoDuplicates
 }
 
+async function getSieges()
+{
+    let mapData = await getMapData()
+
+    var siegesArray = [],
+    siegeData = mapData.sets["siegewar.markerset"].markers,
+    siegeAreaNames = Object.keys(siegeData)
+
+    for (let i = 0; i < siegeAreaNames.length; i++)
+    {      
+        let siege = siegeData[siegeAreaNames[i]],
+            rawinfo = siege.desc.split("<br />")
+
+        var info = []
+
+        rawinfo.forEach(x => { info.push(striptags(x)) })
+
+        var siegeName = info[0].slice(7).split(`Town: `)[0]
+        var besiegedTown = info[0].split(`Town: `)[1]
+        var siegeType = info[1].slice(6)
+        var siegeBal = info[2].slice(15)
+        var timeLeft = info[3].slice(11)
+        var warChest = info[4].slice(11)
+
+        let currentSiege = 
+        {
+            name: fn.removeStyleCharacters(siegeName),
+            town: fn.removeStyleCharacters(besiegedTown),
+            type: siegeType,
+            points: siegeBal,
+            time: timeLeft,
+            warchest: warChest
+        }
+
+    siegesArray.push(currentSiege)
+
+    }
+}
+
 async function getNation(nationNameInput)
 {
     let nations = await getNations()
