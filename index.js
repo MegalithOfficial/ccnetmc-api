@@ -210,6 +210,7 @@ async function getSieges()
     let mapData = await getMapData()
 
     var siegesArray = [],
+    siegesArrayNoDuplicates = [],
     siegeData = mapData.sets["siegewar.markerset"].markers,
     siegeAreaNames = Object.keys(siegeData)
 
@@ -242,6 +243,23 @@ async function getSieges()
     siegesArray.push(currentSiege)
 
     }
+
+    siegesArray.forEach(function (a) 
+    {
+        this[a.name] = 
+        { 
+            name: a.name,
+            town: a.town,
+            type: a.type,
+            points: a.points,
+            time: a.time,
+            warchest: a.warchest
+        }    
+
+        siegesArrayNoDuplicates.push(this[a.name])},
+     Object.create(null))
+
+    return siegesArrayNoDuplicates
 }
 
 async function getNation(nationNameInput)
