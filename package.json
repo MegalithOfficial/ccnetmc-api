@@ -1,7 +1,7 @@
 {
   "name": "ccnetmc",
-  "version": "1.5.6",
-  "description": "A test to demonstrate a public ccnet api",
+  "version": "1.5.7",
+  "description": "An NPM package to interact with the CCNetMC server, and get information from it.",
   "main": "index.js",
   "dependencies": {
     "ajv": "^6.12.6",
@@ -72,5 +72,5 @@
     "ccnetmc"
   ],
   "author": "Owen77Stubbs, Shadowevil015",
-  "license": "UNLICENSED"
+  "license": "MIT"
 }
