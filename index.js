@@ -559,6 +559,7 @@ module.exports =
     getJoinableNations,
     getNearbyPlayers,
     getNearbyTowns,
-    getNearbyNations
+    getNearbyNations,
+    getSieges
 }
 //#endregion
