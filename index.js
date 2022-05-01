@@ -262,6 +262,70 @@ async function getSieges()
     return siegesArrayNoDuplicates
 }
 
+async function getShops()
+{
+    let mapData = await getMapData()
+
+    var shopsArray = [],
+    shopsArrayNoDuplicates = [],
+    shopsData = mapData.sets["quickshop"].markers,
+    shopAreaNames = Object.keys(shopsData)
+
+    for (let i = 0; i < shopAreaNames.length; i++)
+    {      
+        let shop = shopsData[shopAreaNames[i]],
+            rawinfo = shop.desc.split("<br />")
+
+        var info = []
+
+        rawinfo.forEach(x => { info.push(striptags(x)) })
+
+        var item = info[0].slice(6)
+        var owner = info[1].slice(7)
+        var type = info[2].slice(6)
+        var stock = info[3].slice(18)
+        var price = info[4].slice(8).split(" ")[0]
+        var coordX = info[6].slice(3)
+        var coordY = info[7].slice(3)
+        var coordZ = info[8].slice(3)
+    
+
+     let currentShop = 
+        {
+            item: fn.removeStyleCharacters(item),
+            owner: fn.removeStyleCharacters(owner),
+            type: type,
+            stock: stock,
+            price: price,
+            coordX: coordX,
+            coordY: coordY,
+            coordZ: coordZ
+        }
+
+    shopsArray.push(currentShop)
+
+    }
+
+    shopsArray.forEach(function (a) 
+    {
+        this[a.name] = 
+        { 
+            item: a.item,
+            owner: a.owner,
+            type: a.type,
+            stock: a.stock,
+            price: a.price,
+            coordX: a.coordX,
+            coordY: a.coordY,
+            coordZ: a.coordZ
+        }    
+
+        shopsArrayNoDuplicates.push(this[a.name])},
+     Object.create(null))
+
+    return shopsArrayNoDuplicates
+}
+
 async function getNation(nationNameInput)
 {
     let nations = await getNations()
@@ -578,6 +642,7 @@ module.exports =
     getNearbyPlayers,
     getNearbyTowns,
     getNearbyNations,
-    getSieges
+    getSieges,
+    getShops
 }
 //#endregion

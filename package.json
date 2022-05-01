@@ -1,6 +1,6 @@
 {
   "name": "ccnetmc",
-  "version": "1.5.9",
+  "version": "1.6.0",
   "description": "An NPM package to interact with the CCNetMC server, and get information from it.",
   "main": "index.js",
   "dependencies": {
