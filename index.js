@@ -342,7 +342,7 @@ async function getNavalSieges()
         rawinfo.forEach(x => { info.push(striptags(x)) })
 
 		var navalSiegeName = info[1]
-		var navalSiegeController = info[3]
+		var navalSiegeController = info[3].split(" - ")[1].replace("*", "")
 
      let currentNavalSiege = 
         {
