@@ -288,6 +288,7 @@ async function getShops()
         var coordX = info[6].slice(3)
         var coordY = info[7].slice(3)
         var coordZ = info[8].slice(3)
+        var coords = coordX + "," + coordY + "," + coordZ
     
 
      let currentShop = 
@@ -297,9 +298,7 @@ async function getShops()
             type: type,
             stock: stock,
             price: price,
-            coordX: coordX,
-            coordY: coordY,
-            coordZ: coordZ
+            coords: coords
         }
 
     shopsArray.push(currentShop)
@@ -315,9 +314,7 @@ async function getShops()
             type: a.type,
             stock: a.stock,
             price: a.price,
-            coordX: a.coordX,
-            coordY: a.coordY,
-            coordZ: a.coordZ
+            coords: a.coords
         }    
 
         shopsArrayNoDuplicates.push(this[a.name])},
