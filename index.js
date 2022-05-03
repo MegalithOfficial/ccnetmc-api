@@ -288,7 +288,7 @@ async function getShops()
         var coordX = info[6].slice(3)
         var coordY = info[7].slice(3)
         var coordZ = info[8].slice(3)
-        var coords = coordX + "," + coordY + "," + coordZ
+        var coords = coordX + "+" + coordY + "+" + coordZ
     
 
      let currentShop = 
