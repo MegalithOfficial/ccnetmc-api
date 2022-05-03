@@ -323,6 +323,51 @@ async function getShops()
     return shopsArrayNoDuplicates
 }
 
+async function getNavalSieges()
+{
+    let mapData = await getMapData()
+
+    var navalSiegesArray = [],
+    navalSiegesArrayNoDuplicates = [],
+    navalSiegesData = mapData.sets["worldguard.markerset"].areas,
+    navalSiegesAreaNames = Object.keys(navalSiegesData)
+
+    for (let i = 0; i < navalSiegesAreaNames.length; i++)
+    {      
+        let navalSiege = navalSiegesData[navalSiegesAreaNames[i]],
+            rawinfo = navalSiege.desc.split("<br />")
+
+        var info = []
+
+        rawinfo.forEach(x => { info.push(striptags(x)) })
+
+		var navalSiegeName = info[1]
+		var navalSiegeController = info[3]
+
+     let currentNavalSiege = 
+        {
+			name: navalSiegeName,
+			controller: navalSiegeController
+        }
+
+    navalSiegesArray.push(currentNavalSiege)
+
+    }
+
+    navalSiegesArray.forEach(function (a) 
+    {
+        this[a.name] = 
+        { 
+			name: a.name,
+			controller: a.controller
+        }    
+
+        navalSiegesArrayNoDuplicates.push(this[a.name])},
+     Object.create(null))
+
+    return navalSiegesArrayNoDuplicates
+}
+
 async function getNation(nationNameInput)
 {
     let nations = await getNations()
@@ -640,6 +685,7 @@ module.exports =
     getNearbyTowns,
     getNearbyNations,
     getSieges,
-    getShops
+    getShops,
+    getNavalSieges
 }
 //#endregion
