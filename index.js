@@ -122,7 +122,7 @@ async function getTowns()
         var mayor = info[3].slice(9).replace(" ", "")
         if (mayor == "") continue
         
-         var nationName = info[0].slice(10).trim()//.split(" (")[1].slice(0, -1) == "" ? "No Nation" : info[2].split(" (")[1].slice(0, -1).trim(),
+         var nationName = info[0].slice(10).trim()
             residents = info[12].slice(19).trim().split(", ")
 
         let currentTown = 
@@ -180,14 +180,8 @@ async function getTowns()
                   name: a.name,
                   nation: a.nation,
                   residents: a.residents,
-                  //nationResidents: fn.removeDuplicates(nationResidents),
                   area: a.area,
                   mayor: a.mayor,
-                  pvp: a.pvp,
-                  mobs: a.mobs,
-                  public: a.public,
-                  explosion: a.explosion,
-                  fire: a.fire,
                   capital: a.capital,
                   x: a.x,
                   z: a.z,
@@ -494,9 +488,9 @@ async function getResidents()
         {
             var currentResident = currentTown.residents[i]
 
-           // if (currentTown.capital && currentTown.mayor == currentResident) rank = "Nation Leader"
-           // else if (currentTown.mayor == currentResident) rank = "Mayor"
-           // else rank = "Resident"
+            if (currentTown.capital && currentTown.mayor == currentResident) rank = "Nation Leader"
+            else if (currentTown.mayor == currentResident) rank = "Mayor"
+            else rank = "Resident"
 
             let resident =
             {
