@@ -1,6 +1,6 @@
 {
   "name": "ccnetmc",
-  "version": "1.6.5",
+  "version": "1.7.0",
   "description": "An NPM package to interact with the CCNetMC server, and get information from it.",
   "main": "index.js",
   "dependencies": {
@@ -65,11 +65,13 @@
   },
   "repository": {
     "type": "git",
-    "url": "(temp)"
+    "url": "https://github.com/Shadowevil015/CCNetMC-NPM"
   },
   "keywords": [
-    "ccnetmc"
+    "ccnetmc",
+    "nodejs",
+    "minecraft"
   ],
-  "author": "Owen77Stubbs, Shadowevil015",
+  "author": "Owen3H, Shadowevil015",
   "license": "MIT"
 }
