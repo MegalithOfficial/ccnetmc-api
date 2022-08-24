@@ -123,7 +123,8 @@ async function getTowns()
         if (mayor == "") continue
         
          var nationName = info[0].slice(10).trim()
-            residents = info[12].slice(19).trim().split(", ")
+             residents = info[12].slice(19).trim().split(", ")
+             trusted = info[13].slice(20).trim()
 
         let currentTown = 
         {
@@ -139,13 +140,14 @@ async function getTowns()
             bank: info[8].slice(9).trim(),
             upkeep: info[9].slice(11).trim(),
             peacefulness: info[5].slice(12).trim() == "true" ? true : false,
+            trusted: trusted,
             colourCodes: {
                 fill: town.fillcolor,
                 outline: town.color
             }
-        }
-        
+        } 
         townsArray.push(currentTown)
+        console.log(trusted)
     }
     
     // TOWN LOGIC \\  
@@ -188,6 +190,7 @@ async function getTowns()
                   bank: a.bank,
                   upkeep: a.upkeep,
                   peacefulness: a.peacefulness,
+                  trusted: a.trusted,
                   colourCodes: a.colourCodes
               }    
 
@@ -683,3 +686,5 @@ module.exports =
     getNavalSieges
 }
 //#endregion
+
+getTowns();
