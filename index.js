@@ -147,7 +147,6 @@ async function getTowns()
             }
         } 
         townsArray.push(currentTown)
-        console.log(trusted)
     }
     
     // TOWN LOGIC \\  
