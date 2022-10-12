@@ -73,6 +73,14 @@ async function getOnlinePlayerData()
     return fn.editPlayerProps(playerData.players)
 }
 
+async function getOnlineTownyPlayerData()
+{
+    let townyPlayerData = await getTownyPlayerData() 
+    if (!townyPlayerData || !townyPlayerData.players) return
+
+    return fn.editPlayerProps(townyPlayerData.players)
+}
+
 async function getMapData()
 {
     // @ts-ignore
@@ -682,8 +690,7 @@ module.exports =
     getNearbyNations,
     getSieges,
     getShops,
-    getNavalSieges
+    getNavalSieges,
+    getOnlineTownyPlayerData
 }
 //#endregion
-
-getTowns();
