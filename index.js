@@ -1,31 +1,30 @@
 var fetch = require("node-fetch"),
     striptags = require("striptags"),
     fn = require("./functions"),
-    // @ts-ignore
     Minecraft = require("minecraft-lib")
 
-//#region Data Functions
+// Get information for player count on the entire server, and the max amount of players.
 async function getServerData()
 {
     let serverData = await Minecraft.servers.get("play.ccnetmc.com").catch(err => { return err }),
-        emcData = {}
+        ccnetData = {}
 
     if (!serverData || !serverData.players)
     {
-        emcData["serverOnline"] = false
-        emcData["online"] = 0
-        emcData["max"] = 0
+        ccnetData["serverOnline"] = false
+        ccnetData["online"] = 0
+        ccnetData["max"] = 0
 
-        return emcData
+        return ccnetData
     }
 
-        emcData["serverOnline"] = true
-        emcData["online"] = serverData.players.online
-        emcData["max"] = serverData.players.max
+        ccnetData["serverOnline"] = true
+        ccnetData["online"] = serverData.players.online
+        ccnetData["max"] = serverData.players.max
 
-    return emcData
+    return ccnetData
 }
-
+// Get information of player count and weather status for Towny and Nations.
 async function getServerInfo()
 {
     let serverData = await getServerData(),
@@ -47,16 +46,15 @@ async function getServerInfo()
 
     return info
 }
-
+// Fetch the player data for Nations from Dynmap and keep as JSON.
 async function getPlayerData()
 {
-    // @ts-ignore
     let playerData = await fetch("https://map.ccnetmc.com/nationsmap/standalone/dynmap_world.json").then(response => response.json()).catch(err => {})
     if (!playerData || !playerData.players) return
 
     return playerData
 }
-
+// Fetch the player data for Towny from Dynmap and keep as JSON.
 async function getTownyPlayerData()
 {
     let townyPlayerData = await fetch("https://map.ccnetmc.com/townymap/standalone/dynmap_world.json").then(response => response.json()).catch(err => {})
@@ -64,7 +62,7 @@ async function getTownyPlayerData()
 
     return townyPlayerData
 }
-
+// Get a list of online players, by fetching the Nations player data from Dynmap.
 async function getOnlinePlayerData()
 {
     let playerData = await getPlayerData() 
@@ -72,7 +70,7 @@ async function getOnlinePlayerData()
 
     return fn.editPlayerProps(playerData.players)
 }
-
+// Get a list of online players, by fetching the Towny player data from Dynmap.
 async function getOnlineTownyPlayerData()
 {
     let townyPlayerData = await getTownyPlayerData() 
@@ -80,19 +78,17 @@ async function getOnlineTownyPlayerData()
 
     return fn.editPlayerProps(townyPlayerData.players)
 }
-
+// Get the map data for Nations - this includes sieges, naval siege regions, towns and nations.
 async function getMapData()
 {
-    // @ts-ignore
     let mapData = await fetch("https://map.ccnetmc.com/nationsmap/tiles/_markers_/marker_world.json").then(response => response.json()).catch(err => {})
 
     if (!mapData) return
 
     return mapData
 }
-//#endregion
 
-//#region Usable Functions
+// Get information for a specific town with input.
 async function getTown(townNameInput)
 {
     let towns = await getTowns()
@@ -101,7 +97,7 @@ async function getTown(townNameInput)
     if (!foundTown) return "That town does not exist!"
     else return foundTown
 }
-
+// Get all the towns on Nations, and the information about them.
 async function getTowns()
 {
     let mapData = await getMapData(),
@@ -110,7 +106,7 @@ async function getTowns()
     if (!mapData || !ops) return
     if (!mapData.sets["towny.markerset"]) return
 
-    var townsArray = [],
+    let townsArray = [],
         townsArrayNoDuplicates = [],
         townData = mapData.sets["towny.markerset"].areas,
         townAreaNames = Object.keys(townData)
@@ -120,19 +116,15 @@ async function getTowns()
         let town = townData[townAreaNames[i]],
             rawinfo = town.desc.split("<br />")
 
-        var info = []
+        let info = []
 
         rawinfo.forEach(x => { info.push(striptags(x)) })
 
-        var townName = info[1].split(" (")[0].trim()
-        if (townName.endsWith("(Shop)")) continue
-      
-        var mayor = info[3].slice(9).replace(" ", "")
-        if (mayor == "") continue
+        let townName = info[1].split(" (")[0].trim()
         
-         var nationName = info[0].slice(10).trim()
-             residents = info[12].slice(19).trim().split(", ")
-             trusted = info[13].slice(20).trim()
+        let nationName = info[0].slice(10).trim()
+        let residents = info[12].slice(19).trim().split(", ")
+        let trusted = info[13].slice(20).trim()
 
         let currentTown = 
         {
@@ -208,7 +200,7 @@ async function getTowns()
 
     return townsArrayNoDuplicates
 }
-
+// Using siege markers, get all the sieges on Nations, and the information about them.
 async function getSieges()
 {
     let mapData = await getMapData()
@@ -265,68 +257,7 @@ async function getSieges()
 
     return siegesArrayNoDuplicates
 }
-
-async function getShops()
-{
-    let mapData = await getMapData()
-
-    var shopsArray = [],
-    shopsArrayNoDuplicates = [],
-    shopsData = mapData.sets["quickshop"].markers,
-    shopAreaNames = Object.keys(shopsData)
-
-    for (let i = 0; i < shopAreaNames.length; i++)
-    {      
-        let shop = shopsData[shopAreaNames[i]],
-            rawinfo = shop.desc.split("<br />")
-
-        var info = []
-
-        rawinfo.forEach(x => { info.push(striptags(x)) })
-
-        var item = info[0].slice(6)
-        var owner = info[1].slice(7)
-        var type = info[2].slice(6)
-        var stock = info[3].slice(18)
-        var price = info[4].slice(8).split(" ")[0]
-        var coordX = info[6].slice(3)
-        var coordY = info[7].slice(3)
-        var coordZ = info[8].slice(3)
-        var coords = coordX + "+" + coordY + "+" + coordZ
-    
-
-     let currentShop = 
-        {
-            item: fn.removeStyleCharacters(item),
-            owner: fn.removeStyleCharacters(owner),
-            type: type,
-            stock: stock,
-            price: price,
-            coords: coords
-        }
-
-    shopsArray.push(currentShop)
-
-    }
-
-    shopsArray.forEach(function (a) 
-    {
-        this[a.name] = 
-        { 
-            item: a.item,
-            owner: a.owner,
-            type: a.type,
-            stock: a.stock,
-            price: a.price,
-            coords: a.coords
-        }    
-
-        shopsArrayNoDuplicates.push(this[a.name])},
-     Object.create(null))
-
-    return shopsArrayNoDuplicates
-}
-
+// Using Naval Siege markers, get all the Naval Sieges on Nations, and the information about them.
 async function getNavalSieges()
 {
     let mapData = await getMapData()
@@ -371,7 +302,7 @@ async function getNavalSieges()
 
     return navalSiegesArrayNoDuplicates
 }
-
+// Get information about a single nation on Nations, with input.
 async function getNation(nationNameInput)
 {
     let nations = await getNations()
@@ -380,7 +311,7 @@ async function getNation(nationNameInput)
     let foundNation = nations.find(nation => nation.name.toLowerCase() == nationNameInput.toLowerCase()) 
     return !foundNation ? "That nation does not exist!" : foundNation
 }
-
+// Get information about every nation on Nations.
 async function getNations()
 {
     let towns = await getTowns()
@@ -430,7 +361,7 @@ async function getNations()
 
     return nationsArray
 }
-
+// Get enhanced information about an online player (e.g coords, rank)
 async function getOnlinePlayer(playerNameInput)
 {
   if (!playerNameInput) throw { name: "NO_PLAYER_INPUT", message: "No player was inputted!" }
@@ -479,7 +410,7 @@ async function getResident(residentNameInput)
     if (!foundResident) throw { name: "INVALID_RESIDENT", message: "That resident does not exist!" }
     else return foundResident
 }
-
+// Get information about every resident on Nations.
 async function getResidents()
 {
     let towns = await getTowns()
@@ -516,7 +447,7 @@ async function getResidents()
 
     return residentsArray
 }
-
+// Get a list of every player by collecting residents from Town Markers.
 async function getAllPlayers()
 {
     var onlinePlayers = await getOnlinePlayerData(),
@@ -543,7 +474,7 @@ async function getPlayer(playerNameInput)
     var allPlayers = await getAllPlayers()
     return allPlayers.find(p => p.name.toLowerCase() == playerNameInput.toLowerCase())
 }
-
+// This is broken, as CCNet dynmap cuts off the resident list if there is more than x amount of residents.
 async function getTownless()
 {
     let mapData = await getMapData(),
@@ -593,7 +524,7 @@ async function getTownless()
 
     return townlessPlayers
 }
-
+// Get a list of all towns that are not in a nation.
 async function getInvitableTowns(nationName, includeBelonging)
 {
     let nation = await getNation(nationName)
@@ -628,7 +559,7 @@ async function getJoinableNations(townName)
 
     return nations.filter(n => joinable(n))
 }
-
+// Get a list of players that are near these coords, in this radius.
 async function getNearbyPlayers(xInput, zInput, xRadius, zRadius)
 {
     let allPlayers = await getAllPlayers()
@@ -642,7 +573,7 @@ async function getNearbyPlayers(xInput, zInput, xRadius, zRadius)
         }
     })
 }
-
+// Get a list of towns that are near these coords, in this radius.
 async function getNearbyTowns(xInput, zInput, xRadius, zRadius)
 {
     let towns = await getTowns()
@@ -654,7 +585,7 @@ async function getNearbyTowns(xInput, zInput, xRadius, zRadius)
                (t.z <= (zInput + zRadius) && t.z >= (zInput - zRadius))
     })
 }
-
+// Get a list of nations that are near these coords, in this radius.
 async function getNearbyNations(xInput, zInput, xRadius, zRadius)
 {
     let nations = await getNations()
@@ -666,9 +597,8 @@ async function getNearbyNations(xInput, zInput, xRadius, zRadius)
                (n.capitalZ <= (zInput + zRadius) && n.capitalZ >= (zInput - zRadius))
     })
 }
-//#endregion
 
-//#region Exports
+// Export async functions for use in other programs that depend on this NPM package.
 module.exports =    
 {
     getTown,
@@ -689,7 +619,6 @@ module.exports =
     getNearbyTowns,
     getNearbyNations,
     getSieges,
-    getShops,
     getNavalSieges,
     getOnlineTownyPlayerData
 }
