@@ -1,7 +1,9 @@
 import { InvalidServerType, InvalidPlayer, NoPlayerInput, FetchError } from "./Error.js";
 import { RequestManager } from "./RequestManager.js";
-import { Functions } from "./functions.js"
-import striptags from "striptags"
+import { Functions } from "./functions.js";
+import Minecraft from "minecraft-lib";
+import striptags from "striptags";
+
 
 export class CCnet {
 
@@ -9,6 +11,52 @@ export class CCnet {
     this.RequestManager = new RequestManager(options);
     this.Functions = new Functions();
   };
+
+  /**
+   * Get's Minecraft server data.
+   * @return {object}
+   */
+  async getServerData() {
+    let serverData = await Minecraft.servers.get("play.ccnetmc.com").catch(err => { return err })
+
+    if (!serverData || !serverData.players) {
+      ccnetData["serverOnline"] = false
+      ccnetData["online"] = 0
+      ccnetData["max"] = 0
+
+      return ccnetData
+    }
+    ccnetData["serverOnline"] = true
+    ccnetData["online"] = serverData.players.online
+    ccnetData["max"] = serverData.players.max
+
+    return ccnetData
+  };
+
+  /**
+   * Get's Server online player Amount.
+   * @returns {number}
+   */
+  async getServerPlayerCount() {
+
+    let serverData = await this.getServerData(),
+    playerData = await this.getPlayerData({ server: "Nations" }),
+    townyPlayerData = await this.getPlayerData({ server: "Towny" }),
+    info = serverData
+
+    if (playerData != null) {
+        info["towny"] = townyPlayerData.currentcount
+        info["nations"] = playerData.currentcount
+        info["storming"] = playerData.hasStorm
+        info["thundering"] = playerData.isThundering
+        info["ccnet"] = info["towny"] + info["nations"]
+    }
+        
+    if (info["online"] == 0 || !info["online"]) info["hub"] = 0
+    else info["hub"] = info["online"] - info["ccnet"]
+
+    return info
+  }
 
   /**
    * Get's Player data.
