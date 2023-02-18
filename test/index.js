@@ -1,11 +1,17 @@
 import { CCnet } from "../main.js";
 
-const api = new CCnet();
+const api = new CCnet({
+  cache: false,
+  cacheRefreshInterval: 30000
+});
 
-api.getNearbyPlayers(1000, 1000, 50, 50).then(d => {
-  console.log(d);
+api.getAllPlayers().then((d) => {
+  console.log(d)
 })
-
+api.getAllPlayers().then((d) => {
+  console.log("fast")
+  console.log(d)
+})
 /*
 function format(number) {
   return number.toString().replaceAll(",", "").replaceAll("$", "").split(".")[0];

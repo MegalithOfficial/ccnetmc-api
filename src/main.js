@@ -5,8 +5,8 @@ import striptags from "striptags"
 
 export class CCnet {
 
-  constructor() {
-    this.RequestManager = new RequestManager();
+  constructor(options = {}) {
+    this.RequestManager = new RequestManager(options);
     this.Functions = new Functions();
   };
 

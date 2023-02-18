@@ -2,12 +2,14 @@ lockfileVersion: 5.4
 
 specifiers:
   '@sapphire/fetch': ^2.4.1
+  '@wumpjs/storage': ^1.1.0
   minecraft-lib: ^1.1.6
   nodemon: ^2.0.20
   striptags: ^3.2.0
 
 dependencies:
   '@sapphire/fetch': 2.4.1
+  '@wumpjs/storage': 1.1.0
   minecraft-lib: 1.1.6
   striptags: 3.2.0
 
@@ -23,6 +25,20 @@ packages:
       cross-fetch: 3.1.5
     transitivePeerDependencies:
       - encoding
+    dev: false
+
+  /@wumpjs/providers/1.0.2:
+    resolution: {integrity: sha512-B+UkElzzk+mn1b1RJdXSqt4Zg8+AEOASCTVs6ftUtcJfm6pJsH/Xtb85ioo7pOfbPkYN4dj7Wr5/AvzqYoWUOQ==}
+    deprecated: Package no longer supported. Contact Support at https://www.npmjs.com/support for more info.
+    dependencies:
+      colorette: 2.0.19
+    dev: false
+
+  /@wumpjs/storage/1.1.0:
+    resolution: {integrity: sha512-t7ATuJQzGAd0M2aPJtNj/C7owgCwNIizHS6q95Vo58NQwdu1dY+fbx3coYx1EHLEL3SciFvVQvPU2vjo+EgATw==}
+    dependencies:
+      '@wumpjs/providers': 1.0.2
+      typed-emitter: 2.1.0
     dev: false
 
   /abbrev/1.1.1:
@@ -116,6 +132,10 @@ packages:
     optionalDependencies:
       fsevents: 2.3.2
     dev: true
+
+  /colorette/2.0.19:
+    resolution: {integrity: sha512-3tlv/dIP7FWvj3BsbHrGLJ6l/oKh1O3TcgBqMn+yyCagOxc23fyzDS6HypQbgxWbkpDnf52p1LuR4eWDQ/K9WQ==}
+    dev: false
 
   /combined-stream/1.0.8:
     resolution: {integrity: sha512-FQN4MRfuJeHf7cBbBMJFXhKSDq+2kAArBlmRBvcvFE5BB1HZKXtSFASDhdlz9zOYwxh8lDdnvmMOe/+5cdoEdg==}
@@ -463,6 +483,14 @@ packages:
       uuid: 3.4.0
     dev: false
 
+  /rxjs/7.8.0:
+    resolution: {integrity: sha512-F2+gxDshqmIub1KdvZkaEfGDwLNpPvk9Fs6LD/MyQxNgMds/WH9OdDDXOmxUZpME+iSK3rQCctkL0DYyytUqMg==}
+    requiresBuild: true
+    dependencies:
+      tslib: 2.5.0
+    dev: false
+    optional: true
+
   /safe-buffer/5.2.1:
     resolution: {integrity: sha512-rp3So07KcdmmKbGvgaNxQSJr7bGVSVk5S9Eq1F+ppbRo70+YeaDxkw5Dd8NPN+GD6bjnYm2VuPuCXmpuYvmCXQ==}
     dev: false
@@ -541,6 +569,11 @@ packages:
     resolution: {integrity: sha512-N3WMsuqV66lT30CrXNbEjx4GEwlow3v6rr4mCcv6prnfwhS01rkgyFdjPNBYd9br7LpXV1+Emh01fHnq2Gdgrw==}
     dev: false
 
+  /tslib/2.5.0:
+    resolution: {integrity: sha512-336iVw3rtn2BUK7ORdIAHTyxHGRIHVReokCR3XjbckJMK7ms8FysBfhLR8IXnAgy7T0PTPNBWKiH514FOW/WSg==}
+    dev: false
+    optional: true
+
   /tunnel-agent/0.6.0:
     resolution: {integrity: sha512-McnNiV1l8RYeY8tBgEpuodCC1mLUdbSN+CYBL7kJsJNInOP8UjDDEwdk6Mw60vdLLrr5NHKZhMAOSrR2NZuQ+w==}
     dependencies:
@@ -549,6 +582,12 @@ packages:
 
   /tweetnacl/0.14.5:
     resolution: {integrity: sha512-KXXFFdAbFXY4geFIwoyNK+f5Z1b7swfXABfL7HXCmoIWMKU3dmS26672A4EeQtDzLKy7SXmfBu51JolvEKwtGA==}
+    dev: false
+
+  /typed-emitter/2.1.0:
+    resolution: {integrity: sha512-g/KzbYKbH5C2vPkaXGu8DJlHrGKHLsM25Zg9WuC9pMGfuvT+X25tZQWo5fK1BjBm8+UrVE9LDCvaY0CQk+fXDA==}
+    optionalDependencies:
+      rxjs: 7.8.0
     dev: false
 
   /undefsafe/2.0.5:
