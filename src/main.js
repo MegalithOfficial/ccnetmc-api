@@ -64,8 +64,8 @@ export class CCnet {
    */
   async getPlayerData(options = { server: "Nations" }) {
 
-    if (options.server.toLowerCase() === "nations") return await this.RequestManager.getNationsPlayerData();
-    else if (options.server.toLowerCase() === "towny") return await this.RequestManager.getTownyPlayerData();
+    if (options.server.toLocaleLowerCase() === "nations") return await this.RequestManager.getNationsPlayerData();
+    else if (options.server.toLocaleLowerCase() === "towny") return await this.RequestManager.getTownyPlayerData();
     else throw new InvalidServerType("Invalid server type. Please choose either 'Nations' or 'Towny'.");
   };
 
@@ -104,25 +104,50 @@ export class CCnet {
 
       rawinfo.forEach(x => { info.push(striptags(x)) });
 
-      let townName = info[1].split(" (")[0].trim();
+      let vassal = info[1].includes("Vassal") || false
+      let vassalOf = vassal && info[1].split(" ")[2] || "none"
+      let townName = ""
 
       let nationName = info[0].slice(10).trim();
-      let residents = info[12].slice(19).trim().split(", ");
-      let trusted = info[13].slice(20).trim();
+      let residents = info[12].slice(19).trim().split(", ") || info[13].slice(19).trim().split(", ");
+      let trusted = info[13].slice(20).trim() || info[14].slice(20).trim();
+      let mayor = "";
+      let peacefulness = "";
+      let bank = 0;
+      let upkeep = 0;
+
+      if(info[8].slice(9).trim().includes("$")) bank = info[8].slice(9).trim()
+      else if(info[9].slice(9).trim().includes("$")) bank = info[9].slice(9).trim()
+
+      if(info[9].slice(11).trim().includes("$")) upkeep = info[9].slice(11).trim()
+      else if(info[10].slice(11).trim().includes("$")) upkeep = info[10].slice(11).trim()
+      
+      if(info[3].includes("Mayor")) mayor = info[3].slice(9).replace(" ", "")
+      else if(info[4].includes("Mayor")) mayor = info[4].slice(9).replace(" ", "")
+
+      if(info[5].includes("Peaceful?")) peacefulness = info[5].slice(12).trim() == "true" ? true : false
+      else if(info[6].includes("Peaceful?")) peacefulness = info[6].slice(12).trim() == "true" ? true : false
+
+      // info[1].split(" (")[0].trim() || info[2].split(" (")[0].trim();
+
+      if(info[1].includes("Vassal")) townName = info[2].split(" (")[0].trim()
+      else if(!info[1].includes("Vassal") && !info[1].includes("Member")) townName = info[1].split(" (")[0].trim()
 
       let currentTown = {
+        isVassal: vassal,
+        vassalOf: vassalOf,
         area: this.Functions.calcPolygonArea(town.x, town.z, town.x.length) / 16 / 16,
         x: Math.round((Math.max(...town.x) + Math.min(...town.x)) / 2),
         z: Math.round((Math.max(...town.z) + Math.min(...town.z)) / 2),
         name: this.Functions.removeStyleCharacters(townName),
         nation: this.Functions.removeStyleCharacters(nationName),
-        mayor: info[3].slice(9).replace(" ", ""),
+        mayor: mayor,
         residents: residents,
         onlineResidents: ops.filter(op => residents.find(resident => resident == op.name)),
         capital: info[0].includes("Capital"),
-        bank: info[8].slice(9).trim(),
-        upkeep: info[9].slice(11).trim(),
-        peacefulness: info[5].slice(12).trim() == "true" ? true : false,
+        bank: bank,
+        upkeep: upkeep,
+        peacefulness: peacefulness,
         trusted: trusted,
         colourCodes: {
           fill: town.fillcolor,
@@ -152,6 +177,8 @@ export class CCnet {
         };
 
         this[a.name] = {
+          isVassal: a.isVassal,
+          vassalof: a.vassalOf,
           name: a.name,
           nation: a.nation,
           residents: a.residents,
@@ -182,7 +209,8 @@ export class CCnet {
   async getTown(name, options = { server: "Nations" }) {
 
     let towns = await this.getTowns({ server: options.server });
-    return (towns.find(town => town.name.toLowerCase() == name.toLowerCase()) ?? null);
+    console.log(towns)
+    return (towns.find(town => town.name.toLocaleLowerCase() == name.toLocaleLowerCase()) ?? null);
   };
 
   /**
@@ -297,7 +325,7 @@ export class CCnet {
   async getNation(name, options = { server: "Nations" }) {
 
     let nations = await this.getNations({ server: options.server });
-    return (nations.find(nation => nation.name.toLowerCase() == name.toLowerCase()) ?? null);
+    return (nations.find(nation => nation.name.toLocaleLowerCase() == name.toLocaleLowerCase()) ?? null);
   };
 
   /**
@@ -360,7 +388,7 @@ export class CCnet {
     const ops = await this.getOnlinePlayers(true, { server: options.server });
     if (!ops) throw new FetchError("Failed to fetch data.");
 
-    let foundPlayer = ops.find(op => op.name.toLowerCase() == name.toLowerCase());
+    let foundPlayer = ops.find(op => op.name.toLocaleLowerCase() == name.toLocaleLowerCase());
     if (!foundPlayer) throw InvalidPlayer("Player doesnt Exist or offline.");
 
     return (foundPlayer ?? null);
@@ -458,7 +486,7 @@ export class CCnet {
    */
   async getPlayer(name, options = { server: "Nations" }) {
     var allPlayers = await this.getAllPlayers({ server: options.server });
-    return (allPlayers.find(p => p.name.toLowerCase() == name.toLowerCase()) ?? null);
+    return (allPlayers.find(p => p.name.toLocaleLowerCase() == name.toLocaleLowerCase()) ?? null);
   };
 
   /**

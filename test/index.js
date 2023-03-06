@@ -1,15 +1,9 @@
 import { CCnet } from "../main.js";
 
-const api = new CCnet({
-  cache: false,
-  cacheRefreshInterval: 30000
-});
+const api = new CCnet({});
 
-api.getAllPlayers().then((d) => {
-  console.log(d)
-})
-api.getAllPlayers().then((d) => {
-  console.log("fast")
-  console.log(d)
-})
+(async () => {
+const data = await api.getTowns({ server: "Nations" })
+console.log(data)
+})()
 
