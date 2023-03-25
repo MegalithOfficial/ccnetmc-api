@@ -1,6 +1,6 @@
 {
-  "name": "ccnetmc",
-  "version": "1.9.2",
+  "name": "ccnetmc-api",
+  "version": "1.0.0",
   "description": "An NPM package to interact with the CCNetMC server, and get information from it.",
   "main": "main.js",
   "type": "module",
@@ -10,14 +10,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/Shadowevil015/CCNetMC-NPM"
+    "url": "https://github.com/MegalithOffical/ccnetmc-api"
   },
   "keywords": [
     "ccnetmc",
     "nodejs",
     "minecraft"
   ],
-  "author": "Owen3H, Shadowevil015, MegalithOfficial",
+  "author": "MegalithOfficial",
   "license": "MIT",
   "devDependencies": {
     "nodemon": "^2.0.20"
