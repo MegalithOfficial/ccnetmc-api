@@ -20,7 +20,7 @@
   "author": "MegalithOfficial",
   "license": "MIT",
   "devDependencies": {
-    "nodemon": "^2.0.20"
+    "nodemon": "^2.0.22"
   },
   "dependencies": {
     "@sapphire/fetch": "^2.4.1",
