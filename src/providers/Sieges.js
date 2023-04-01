@@ -8,6 +8,7 @@ export class Sieges {
   constructor(provider, options = { debug: false }) {
     this.provider = provider
     this.Functions = new Functions()
+    this.RequestManager = new RequestManager()
   }
 
   /**
@@ -21,6 +22,7 @@ export class Sieges {
     let siegeAreaNames = Object.keys(siegeData);
 
     for (let i = 0; i < siegeAreaNames.length; i++) {
+      
 
       let siege = siegeData[siegeAreaNames[i]];
       let rawinfo = siege.desc.split("<br />");
@@ -30,6 +32,7 @@ export class Sieges {
       let siegeBal = info[2].slice(15);
       let timeLeft = info[3].slice(11);
       let warChest = info[4].slice(11);
+      console.log(siege)
 
       siegesArray.push({
         name: this.Functions.removeStyleCharacters(siegeName),
@@ -37,7 +40,10 @@ export class Sieges {
         type: siegeType,
         points: siegeBal,
         time: timeLeft,
-        warchest: warChest
+        warchest: warChest,
+        x: siege.x,
+        y: siege.y,
+        z: siege.z,
       });
     }
 

@@ -1,8 +1,8 @@
 import { CCnet } from "../main.js";
 
-const api = new CCnet({});
+const api = new CCnet();
 
 (async () => {
-const data = await api.towns.getTowns({ server: "nations" })
-console.log(data)
-})()
+const data = await api.server.getServerData();
+console.log(data);
+})();

@@ -27,7 +27,7 @@ export class Nations {
    */
   async getAllNations(options = { server: "Nations" }) {
     const remove = this.Functions.removeDuplicates
-    let towns = await this.provider.towns.getTowns({ server: options.server });
+    let towns = await this.provider.towns.getAllTowns({ server: options.server });
     if (!towns) return;
 
     let nationsArray = [];

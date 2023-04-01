@@ -1,212 +1,153 @@
 import types from "../types/types.js";
 import striptags from "striptags";
-import { RequestManager, Functions } from "../export.js"
+import fs from "node:fs";
+import { RequestManager, Functions } from "../export.js";
 
 export class Towns {
   constructor(provider, options = { debug: false }) {
-    this.provider = provider
-    this.Functions = new Functions()
-    this.RequestManager = new RequestManager()
+    this.provider = provider;
+    this.Functions = new Functions();
+    this.RequestManager = new RequestManager();
   }
 
   /**
    * Get All Towns in server.
    * @returns {object}
    */
-  async getTowns({ server = "Nations" } = {}) {
-    const mapData = await this.RequestManager.getMapData({ server });
-    const ops = await this.provider.player.getOnlinePlayerData({ server });
+  async getAllTowns(options = { server: "Nations" }) {
 
-    if (server.toLocaleLowerCase() === "towny") {
-       throw Error("Towny option is not supported for now.")
-      /*if (!mapData?.sets || !ops) return;
-
-      const townareas = mapData.sets["towny.markerset"]?.areas ?? [];
-      if (!townareas) return;
-
-      let townsArray = [],
-        townsArrayNoDuplicates = [],
-        townData = mapData.sets["towny.markerset"].areas,
-        townAreaNames = Object.keys(townData);
-
-      for (const townAreaName of townAreaNames) {
-        let town = townData[townAreaName],
-          rawinfo = town.desc.split("<br />");
-
-        let info = rawinfo.map((item) => striptags(item));
-
-        let nation = info[0] || "None";
-        let Townname = info[1];
-        let population = info[2].slice(" - ")[1];
-        let mayor = info[3].slice(" - ")[1]
-        let Board = info[5].slice(" - ")[1];
-        let Residents = info[6].slice(" - ")[1];
-        let Founded = info[7].slice("-")[1];
-        console.log(nation, Townname, population, mayor, Board, Residents, Founded);
-
-        let currentTown = {
-          nation: nation,
-          name: Townname,
-          population: population,
-          mayor: mayor,
-          board: Board,
-          residents: Residents,
-          founded: Founded,
-          onlineResidens: ops.filter((op) => Residents.find((resident) => resident == op.name)),
-        }
-
-        townsArray.push(currentTown);
-
-      }
-
-      townsArray.forEach((a) => {
-        if (!this[a.name]) {
-          let nationResidents = [];
-
-          if (a.capital || a.nation != "No Nation") {
-            let nationTowns = townsArray.filter((town) => town.nation === a.nation);
-            nationResidents = nationTowns.flatMap((town) => town.residents);
-          }
-
-          this[a.name] = {
-            name: a.name,
-            nation: a.nation,
-            residents: a.residents,
-            mayor: a.mayor,
-            population: a.population,
-            board: a.board,
-            founded: a.founded,
-          };
-
-          townsArrayNoDuplicates.push(this[a.name]);
-        } else this[a.name].area += a.area;
-      }, Object.create(null));*/
-
+    if(options.server.toLocaleLowerCase() === "towny" ) {
+      throw new Error("Towny Support currently not available.")
     } else {
+    const mapData = await this.RequestManager.getMapData({
+      server: options.server,
+    });
+    const ops = await this.provider.player.getOnlinePlayerData({
+      server: options.server,
+    });
+    if (!mapData || !ops) return;
+    if (!mapData.sets["towny.markerset"]) return;
+    let townsArray = [],
+      townsArrayNoDuplicates = [],
+      townData = mapData.sets["towny.markerset"].areas,
+      townAreaNames = Object.keys(townData);
+    for (let i = 0; i < townAreaNames.length; i++) {
+      let town = townData[townAreaNames[i]],
+        rawinfo = town.desc.split("<br />");
+      let info = [];
 
-      if (!mapData?.sets || !ops) return;
+      rawinfo.forEach((x) => {
+        info.push(striptags(x));
+      });
 
-      const townareas = mapData.sets["towny.markerset"]?.areas ?? [];
-      if (!townareas) return;
+      let vassal = info[1].includes("Vassal") || false;
+      let vassalOf = (vassal && info[1].split(" ")[2]) || "none";
+      let townName = "";
+      let Occupiedby = "";
+      let IsOccupied = "";
 
-      let townsArray = [],
-        townsArrayNoDuplicates = [],
-        townData = mapData.sets["towny.markerset"].areas,
-        townAreaNames = Object.keys(townData);
+      let nationName = info[0].slice(10).trim();
+      Occupiedby = info[2].split(" ")[1] || "none";
+      IsOccupied = Occupiedby ? true : Occupiedby === "none" ? false : true ;
 
-      for (const townAreaName of townAreaNames) {
-        let town = townData[townAreaName],
-          rawinfo = town.desc.split("<br />");
+      let residents =
+        info[12].slice(19).trim().split(", ") ||
+        info[13].slice(19).trim().split(", ");
+      let trusted = info[13].slice(20).trim() || info[14].slice(20).trim();
+      let mayor = "";
+      let peacefulness = "";
+      let bank = 0;
+      let upkeep = 0;
 
-        let info = rawinfo.map((item) => striptags(item));
+      if (info[8].slice(9).trim().includes("$")) bank = info[8].slice(9).trim();
+      else if (info[9].slice(9).trim().includes("$"))
+        bank = info[9].slice(9).trim();
 
-        let [nationName, vassalInfo, townNameInfo, mayorInfo, , peacefulnessInfo] =
-          info;
+      if (info[9].slice(11).trim().includes("$"))
+        upkeep = info[9].slice(11).trim();
+      else if (info[10].slice(11).trim().includes("$"))
+        upkeep = info[10].slice(11).trim();
 
-        let vassal = vassalInfo.includes("Vassal");
-        let vassalOf = vassal ? vassalInfo.split(" ")[2] : "none";
-        let townName = "";
+      if (info[3].includes("Mayor")) mayor = info[3].slice(9).replace(" ", "");
+      else if (info[4].includes("Mayor"))
+        mayor = info[4].slice(9).replace(" ", "");
 
-        nationName = nationName.slice(10).trim();
-        let residents =
-          info[12].slice(19).trim().split(", ") ||
-          info[13].slice(19).trim().split(", ");
-        let trusted = info[13].slice(20).trim() || info[14].slice(20).trim();
-        let mayor = "";
-        let peacefulness = "";
-        let bank = 0;
-        let upkeep = 0;
+      if (info[5].includes("Peaceful?"))
+        peacefulness = info[5].slice(12).trim() == "true" ? true : false;
+      else if (info[6].includes("Peaceful?"))
+        peacefulness = info[6].slice(12).trim() == "true" ? true : false;
 
-        if (info[8].slice(9).trim().includes("$")) bank = info[8].slice(9).trim();
-        else if (info[9].slice(9).trim().includes("$"))
-          bank = info[9].slice(9).trim();
+      if (info[1].includes("Vassal")) townName = info[2].split(" (")[0].trim();
+      else if (!info[1].includes("Vassal") && !info[1].includes("Member"))
+        townName = info[1].split(" (")[0].trim();
 
-        if (info[9].slice(11).trim().includes("$"))
-          upkeep = info[9].slice(11).trim();
-        else if (info[10].slice(11).trim().includes("$"))
-          upkeep = info[10].slice(11).trim();
-
-        if (mayorInfo.startsWith("Mayor")) {
-          let [, mayorName] = mayorInfo.split(":");
-          mayor = mayorName.replace(" ", "");
-        } else if (info[4].startsWith("Mayor")) {
-          let [, mayorName] = info[4].split(":");
-          mayor = mayorName.replace(" ", "");
+      let currentTown = {
+        isVassal: vassal,
+        vassalOf: vassalOf,
+        area:
+          this.Functions.calcPolygonArea(town.x, town.z, town.x.length) /
+          16 /
+          16,
+        x: Math.round((Math.max(...town.x) + Math.min(...town.x)) / 2),
+        z: Math.round((Math.max(...town.z) + Math.min(...town.z)) / 2),
+        name: this.Functions.removeStyleCharacters(townName),
+        nation: this.Functions.removeStyleCharacters(nationName),
+        mayor: mayor,
+        residents: residents,
+        onlineResidents: ops.filter((op) =>
+          residents.find((resident) => resident == op.name)
+        ),
+        capital: info[0].includes("Capital"),
+        bank: bank,
+        upkeep: upkeep,
+        peacefulness: peacefulness,
+        trusted: trusted,
+        colourCodes: {
+          fill: town.fillcolor,
+          outline: town.color,
+        },
+      };
+      townsArray.push(currentTown);
+    }
+    townsArray.forEach(function (a) {
+      if (!this[a.name]) {
+        let nationResidents = [];
+        if (a.capital || a.nation != "No Nation") {
+          for (let i = 0; i < townsArray.length; i++) {
+            var currentNation = townsArray[i].nation;
+            let residents = townsArray[i].residents;
+            if (currentNation == a.nation) {
+              for (let i = 0; i < residents.length; i++) {
+                let currentResident = residents[i];
+                nationResidents.push(currentResident);
+              }
+            }
+          }
         }
 
-        if (peacefulnessInfo.startsWith("Peaceful?")) {
-          let [, peacefulnessValue] = peacefulnessInfo.split(":");
-          peacefulness = peacefulnessValue.trim() === "true";
-        } else if (info[6].startsWith("Peaceful?")) {
-          let [, peacefulnessValue] = info[6].split(":");
-          peacefulness = peacefulnessValue.trim() === "true";
-        }
-
-        if (vassalInfo.includes("Vassal"))
-          townName = townNameInfo.split(" (")[0].trim();
-        else if (!vassalInfo.includes("Vassal") && !vassalInfo.includes("Member"))
-          townName = townNameInfo.split(" (")[0].trim();
-
-        let currentTown = {
-          isVassal: vassal,
-          vassalOf,
-          area:
-            this.Functions.calcPolygonArea(town.x, town.z, town.x.length) / 16 / 16,
-          x: Math.round((Math.max(...town.x) + Math.min(...town.x)) / 2),
-          z: Math.round((Math.max(...town.z) + Math.min(...town.z)) / 2),
-          name: this.Functions.removeStyleCharacters(townName),
-          nation: this.Functions.removeStyleCharacters(nationName),
-          mayor,
-          residents,
-          onlineResidents: ops.filter((op) =>
-            residents.find((resident) => resident == op.name)
-          ),
-          capital: info[0].includes("Capital"),
-          bank,
-          upkeep,
-          peacefulness,
-          trusted,
-          colourCodes: {
-            fill: town.fillcolor,
-            outline: town.color,
-          },
+        this[a.name] = {
+          isVassal: a.isVassal,
+          vassalof: a.vassalOf,
+          name: a.name,
+          nation: a.nation,
+          residents: a.residents,
+          area: a.area,
+          mayor: a.mayor,
+          capital: a.capital,
+          x: a.x,
+          z: a.z,
+          bank: a.bank,
+          upkeep: a.upkeep,
+          peacefulness: a.peacefulness,
+          trusted: a.trusted,
+          colourCodes: a.colourCodes,
         };
 
-        townsArray.push(currentTown);
-      }
-      townsArray.forEach((a) => {
-        if (!this[a.name]) {
-          let nationResidents = [];
-
-          if (a.capital || a.nation != "No Nation") {
-            let nationTowns = townsArray.filter((town) => town.nation === a.nation);
-            nationResidents = nationTowns.flatMap((town) => town.residents);
-          }
-
-          this[a.name] = {
-            isVassal: a.isVassal,
-            vassalof: a.vassalOf,
-            name: a.name,
-            nation: a.nation,
-            residents: a.residents,
-            area: a.area,
-            mayor: a.mayor,
-            capital: a.capital,
-            x: a.x,
-            z: a.z,
-            bank: a.bank,
-            upkeep: a.upkeep,
-            peacefulness: a.peacefulness,
-            trusted: a.trusted,
-            colourCodes: a.colourCodes,
-          };
-
-          townsArrayNoDuplicates.push(this[a.name]);
-        } else this[a.name].area += a.area;
-      }, Object.create(null));
-
-      return townsArrayNoDuplicates;
-    }
+        townsArrayNoDuplicates.push(this[a.name]);
+      } else this[a.name].area += a.area;
+    }, Object.create(null));
+    return townsArrayNoDuplicates;
+   }
   }
 
   /**
@@ -215,11 +156,10 @@ export class Towns {
    * @returns {object}
    */
   async getTown(name, { server = "Nations" } = {}) {
-    let towns = await this.getTowns({ server });
+    let towns = await this.getAllTowns({ server });
     return (
-      towns.find(
-        (town) => town.name.toLowerCase() === name.toLowerCase()
-      ) ?? null
+      towns.find((town) => town.name.toLowerCase() === name.toLowerCase()) ??
+      null
     );
   }
 
@@ -232,10 +172,15 @@ export class Towns {
    * @returns {object}
    */
   invitable(town, nation, includeBelonging) {
-    const distance = Math.hypot(town.x - nation.capitalX, town.z - nation.capitalZ);
+    const distance = Math.hypot(
+      town.x - nation.capitalX,
+      town.z - nation.capitalZ
+    );
     const differentNation = town.nation !== nation.name;
     const noNation = town.nation === "No Nation";
-    return distance <= 3000 && differentNation && (includeBelonging || noNation);
+    return (
+      distance <= 3000 && differentNation && (includeBelonging || noNation)
+    );
   }
 
   /**
@@ -245,12 +190,14 @@ export class Towns {
    * @returns {object}
    */
   async getInvitableTowns(name, includeBelonging, { server = "Nations" } = {}) {
-    let nation = await this.provider.getNation(name, { server });
+    let nation = await this.provider.nations.getNation(name, { server });
     if (nation === "That nation does not exist!") return nation;
 
-    let towns = await this.getTowns({ server });
+    let towns = await this.getAllTowns({ server });
     if (!towns) return;
 
-    return towns.filter((town) => this.invitable(town, nation, includeBelonging));
+    return towns.filter((town) =>
+      this.invitable(town, nation, includeBelonging)
+    );
   }
 }

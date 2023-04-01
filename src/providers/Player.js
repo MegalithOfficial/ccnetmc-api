@@ -70,7 +70,7 @@ export class Player {
    * @returns
    */
   async getResidents(options = { server: "Nations" }) {
-    const towns = await this.provider.getTowns({ server: options.server });
+    const towns = await this.provider.towns.getAllTowns({ server: options.server });
     if (!towns) {
       return;
     }
