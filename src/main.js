@@ -27,5 +27,4 @@ export class CCnet {
     this.Functions = new Functions(options.Functions);
    return void 0;
   };
-
 };
