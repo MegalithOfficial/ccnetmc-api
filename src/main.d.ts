@@ -1,16 +1,13 @@
-import { Towns, Nations, Player, Server, Sieges } from "./export.js";
 import types from "./types/types.js";
-import { RequestManager } from "./request/RequestManager.js";
-import { Functions } from "./utils/functions.js";
 
 export declare class CCnet {
-  player: Player;
-  nations: Nations;
-  server: Server;
-  siege: Sieges;
-  towns: Towns;
-  RequestManager: RequestManager;
-  Functions: Functions;
+  player: import("./providers/Player.js").Player;
+  nations: import("./providers/Nations.js").Nations;
+  server: import("./providers/Server.js").Server;
+  siege: import("./providers/Sieges.js").Sieges;
+  towns: import("./providers/Towns.js").Towns;
+  RequestManager: import("./request/RequestManager.js").RequestManager;
+  Functions: import("./utils/functions.js").Functions;
   types: typeof types;
 
   constructor(options?: {
