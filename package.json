@@ -25,7 +25,7 @@
   "dependencies": {
     "@sapphire/fetch": "^2.4.1",
     "minecraft-lib": "^1.1.6",
-    "ora": "^6.3.0",
+    "ora": "^6.3.1",
     "striptags": "^3.2.0"
   }
 }
