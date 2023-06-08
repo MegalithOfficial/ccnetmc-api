@@ -29,5 +29,4 @@ export class CCnet {
     this.types = types;
    return void 0;
   };
-
 };
