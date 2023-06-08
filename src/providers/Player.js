@@ -67,7 +67,7 @@ export class Player {
 
   /**
    * Get all of Towns Residents.
-   * @returns
+   * @returns {Array}
    */
   async getResidents(options = { server: "Nations" }) {
     const towns = await this.provider.towns.getAllTowns({ server: options.server });

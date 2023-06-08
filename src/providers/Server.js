@@ -35,7 +35,7 @@ export class Server {
   }
   /**
    * Get's Server online player Amount.
-   * @returns {number}
+   * @returns {object}
    */
   async getServerPlayerCount() {
     const [serverData, playerData, townyPlayerData] = await Promise.all([

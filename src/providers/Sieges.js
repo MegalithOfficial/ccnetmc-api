@@ -1,6 +1,5 @@
-import types from '../types/types.js';
 import striptags from "striptags";
-import { Towns, Nations, RequestManager, CCnet, Functions } from "../export.js"
+import { RequestManager, Functions } from "../export.js"
 
 
 export class Sieges {
@@ -13,7 +12,7 @@ export class Sieges {
 
   /**
    * Get's All sieges in Nations server.
-   * @returns {object}
+   * @returns {Object<{ name: string }>}
    */
   async getAllSieges() {
     let mapData = await this.RequestManager.getMapData({ server: "Nations" });
@@ -52,6 +51,7 @@ export class Sieges {
 
   /**
    * Get's All Naval sieges in Nations server.
+   * @returns {Promise<{ name: any; controller: any; }[]>}
    */
 async getNavalAllSieges() {
 
@@ -78,3 +78,11 @@ async getNavalAllSieges() {
 }
 
 }
+
+/**
+ * (method) Sieges.getNavalAllSieges(): Promise<{
+    name: any;
+    controller: any;
+}[]>
+Get's All Naval sieges 
+ */

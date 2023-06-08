@@ -1,4 +1,5 @@
 import { Towns, Nations, Player, Server, Sieges } from "./export.js";
+import types  from "./types/types.js";
 import { RequestManager } from "./request/RequestManager.js";
 import { Functions } from "./utils/functions.js";
 
@@ -25,6 +26,7 @@ export class CCnet {
     this.towns = new Towns(this, options);
     this.RequestManager = new RequestManager(options.RequestManager);
     this.Functions = new Functions(options.Functions);
+    this.types = types;
    return void 0;
   };
 
