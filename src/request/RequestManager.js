@@ -1,5 +1,5 @@
 import { fetch, FetchResultTypes } from '@sapphire/fetch';
-import { InvalidServerType } from '../utils/Error.js';
+import { InvalidServerType, FetchError } from '../utils/Error.js';
 import types from '../types/types.js';
 export class RequestManager {
   /**
@@ -19,11 +19,12 @@ export class RequestManager {
    */
   async getMapData(serverOptions = { server: "Nations" }) {
     if (serverOptions.server.toLowerCase() === "nations") {
-      const data = (await fetch(this.nationMapURL, {}, FetchResultTypes.JSON) ?? null)
-      return data;
+      const data = await fetch(this.nationMapURL, {}, FetchResultTypes.JSON).catch(error => { throw new FetchError("Server Replied with unexpected Error. Error code " + error.code, error.code); });
+      return (data ?? null);
+
     } else if (serverOptions.server.toLowerCase() === "towny") {
-      const data = (await fetch(this.townyMapURL, {}, FetchResultTypes.JSON) ?? null);
-      return data;
+      const data = await fetch(this.townyMapURL, {}, FetchResultTypes.JSON).catch(error => { throw new FetchError("Server Replied with unexpected Error. Error code " + error.code, error.code); });
+      return (data ?? null);
     } else {
       throw new InvalidServerType(types.errors.requestErrors.InvalidServerType, types.errors.requestErrors.errorCodes.InvalidServerType);
     }
@@ -34,7 +35,8 @@ export class RequestManager {
    * @returns {object}
    */
   async getNationsPlayerData() {
-    return (await fetch(this.nationURL, {}, FetchResultTypes.JSON) ?? null);
+    const data = await fetch(this.nationURL, {}, FetchResultTypes.JSON).catch(error => { throw new FetchError("Server Replied with unexpected Error. Error code " + error.code, error.code); });
+    return (data ?? null);
   }
 
   /**
@@ -42,6 +44,7 @@ export class RequestManager {
    * @returns {object}
    */
   async getTownyPlayerData() {
-    return (await fetch(this.townyURL, {}, FetchResultTypes.JSON) ?? null);
+    const data = await fetch(this.townyURL, {}, FetchResultTypes.JSON).catch(error => { throw new FetchError("Server Replied with unexpected Error. Error code " + error.code, error.code); });
+    return (data ?? null);
   }
 };
