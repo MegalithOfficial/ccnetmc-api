@@ -1,6 +1,6 @@
 {
   "name": "ccnetmc-api",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "An NPM package to interact with the CCNetMC server, and get information from it.",
   "main": "main.js",
   "type": "module",
