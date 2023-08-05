@@ -12,7 +12,7 @@ export class Sieges {
 
   /**
    * Get's All sieges in Nations server.
-   * @returns {Object<{ name: string }>}
+   * @returns {Object}
    */
   async getAllSieges() {
     let mapData = await this.RequestManager.getMapData({ server: "Nations" });
@@ -31,7 +31,6 @@ export class Sieges {
       let siegeBal = info[2].slice(15);
       let timeLeft = info[3].slice(11);
       let warChest = info[4].slice(11);
-      console.log(siege)
 
       siegesArray.push({
         name: this.Functions.removeStyleCharacters(siegeName),
@@ -55,7 +54,7 @@ export class Sieges {
    */
 async getNavalAllSieges() {
 
-    let mapData = await this.RequestManager.getMapData({ server: "Nations" });
+    let mapData = await this.RequestManager.getMapData();
     let navalSiegesArray = [];
     let navalSiegesData = mapData.sets["worldguard.markerset"].areas;
     let navalSiegesAreaNames = Object.keys(navalSiegesData);
@@ -70,7 +69,8 @@ async getNavalAllSieges() {
 
         navalSiegesArray.push({
             name: navalSiegeName,
-            controller: navalSiegeController
+            controller: navalSiegeController,
+            type: info[0].includes("Movecraft") ? "movecraft" : "other" 
         });
     }
 

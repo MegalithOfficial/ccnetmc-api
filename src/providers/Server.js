@@ -25,7 +25,7 @@ export class Server {
         max: players.max,
       };
     } catch (error) {
-      console.error(error);
+      throw error;
       return {
         serverOnline: false,
         online: 0,
@@ -33,51 +33,34 @@ export class Server {
       };
     }
   }
-  /**
-   * Get's Server online player Amount.
-   * @returns {object}
-   */
-  async getServerPlayerCount() {
-    const [serverData, playerData, townyPlayerData] = await Promise.all([
-      this.getServerData(),
-      this.getPlayerData({ server: "Nations" }),
-      this.getPlayerData({ server: "Towny" }),
-    ]);
+/**
+ * Get's Server online player Amount. Towny is not included.
+ * @returns {object}
+ */
+async getServerPlayerCount() {
+  const [serverData, playerData] = await Promise.all([
+    this.getServerData(),
+    this.getPlayerData({ server: "Nations" }),
+  ]);
 
-    const info = {
-      online: serverData.online,
-      towny: townyPlayerData?.currentcount || 0,
-      nations: playerData?.currentcount || 0,
-      storming: playerData?.hasStorm || false,
-      thundering: playerData?.isThundering || false,
-      ccnet:
-        (townyPlayerData?.currentcount || 0) + (playerData?.currentcount || 0),
-      hub: Math.max(
-        0,
-        serverData.online -
-          ((townyPlayerData?.currentcount || 0) +
-            (playerData?.currentcount || 0))
-      ),
-    };
+  const info = {
+    online: serverData.online,
+    nations: playerData?.currentcount || 0,
+    storming: playerData?.hasStorm || false,
+    thundering: playerData?.isThundering || false,
+    ccnet: playerData?.currentcount || 0,
+    hub: Math.max(0, serverData.online - (playerData?.currentcount || 0)),
+  };
 
-    return info;
-  }
+  return info;
+}
+
 
   /**
    * Get's Player data.
    * @returns {object}
    */
-  async getPlayerData(options = { server: "Nations" }) {
-    const server = options.server.toLowerCase();
-    if (server === "nations") {
+  async getPlayerData() {
       return await this.RequestManager.getNationsPlayerData();
-    } else if (server === "towny") {
-      return await this.RequestManager.getTownyPlayerData();
-    } else {
-      throw new InvalidServerType(
-        types.errors.requestErrors.InvalidServerType,
-        types.errors.requestErrors.errorCodes.InvalidServerType
-      );
     }
-  }
 }

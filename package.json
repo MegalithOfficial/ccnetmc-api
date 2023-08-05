@@ -1,9 +1,10 @@
 {
   "name": "ccnetmc-api",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "An NPM package to interact with the CCNetMC server, and get information from it.",
   "main": "main.js",
   "type": "module",
+  "types": "src/global.d.ts",
   "scripts": {
     "dev": "nodemon main.js",
     "test": "nodemon test/index.js"

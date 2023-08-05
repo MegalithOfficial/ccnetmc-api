@@ -11,8 +11,8 @@ export class Nations {
    * @param {string} name
    * @returns {object}
    */
-  async getNation(name, options = { server: "Nations" }) {
-    let nations = await this.getAllNations({ server: options.server });
+  async getNation(name) {
+    let nations = await this.getAllNations();
     
     return (
       nations.find(
@@ -25,9 +25,9 @@ export class Nations {
    * Get's all of Nations in server.
    * @returns {Array}
    */
-  async getAllNations(options = { server: "Nations" }) {
+  async getAllNations() {
     const remove = this.Functions.removeDuplicates
-    let towns = await this.provider.towns.getAllTowns({ server: options.server });
+    let towns = await this.provider.towns.getAllTowns();
     if (!towns) return;
 
     let nationsArray = [];
@@ -88,11 +88,11 @@ export class Nations {
    * @param {string} name
    * @returns {object}
    */
-  async getJoinableNations(options = { server: "Nations" }) {
-    let town = await this.provider.towns.getTown(townName, { server: options.server });
+  async getJoinableNations() {
+    let town = await this.provider.towns.getTown(townName, );
     if (town == "That town does not exist!") return town;
 
-    let nations = await this.getAllNations({ server: options.server });
+    let nations = await this.getAllNations();
     if (!nations) return;
 
     return nations.filter((n) => this.joinable(n, town));

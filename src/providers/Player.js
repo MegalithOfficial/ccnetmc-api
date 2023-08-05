@@ -13,14 +13,14 @@ export class Player {
    * @param {string} name
    * @returns {object}
    */
-  async getPlayer(name, options = { server: "Nations" }) {
+  async getPlayer(name) {
     if (!name) {
       throw new NoPlayerInput("No Player name provided.");
     } else if (typeof name !== "string") {
       throw InvalidPlayer("Player name must be a string.");
     }
   
-    const ops = await this.getOnlinePlayers(true, { server: options.server });
+    const ops = await this.getOnlinePlayers(true);
     if (!ops) {
       throw new FetchError("Failed to fetch data.");
     }
@@ -43,16 +43,13 @@ export class Player {
    */
   async getOnlinePlayers(
     includeResidentInfo = true,
-    options = { server: "Nations" }
   ) {
-    const onlinePlayers = await this.getOnlinePlayerData({
-      server: options.server,
-    });
+    const onlinePlayers = await this.getOnlinePlayerData();
     if (!includeResidentInfo) {
       return onlinePlayers;
     }
   
-    const residents = await this.getResidents({ server: options.server });
+    const residents = await this.getResidents();
     if (!residents) {
       return;
     }
@@ -69,8 +66,8 @@ export class Player {
    * Get all of Towns Residents.
    * @returns {Array}
    */
-  async getResidents(options = { server: "Nations" }) {
-    const towns = await this.provider.towns.getAllTowns({ server: options.server });
+  async getResidents() {
+    const towns = await this.provider.towns.getAllTowns();
     if (!towns) {
       return;
     }
@@ -96,10 +93,10 @@ export class Player {
    * Get's all of players.
    * @returns {object}
    */
-  async getAllPlayers(options = { server: "Nations" }) {
+  async getAllPlayers() {
     const [onlinePlayers, residents] = await Promise.all([
-      this.getOnlinePlayerData({ server: options.server }),
-      this.getResidents({ server: options.server }),
+      this.getOnlinePlayerData(),
+      this.getResidents(),
     ]);
   
     if (!onlinePlayers || !residents) {
@@ -119,8 +116,8 @@ export class Player {
    * @param {String} name
    * @returns {object}
    */
-  async getPlayer(name, options = { server: "Nations" }) {
-    const allPlayers = await this.getAllPlayers({ server: options.server });
+  async getPlayer(name, ) {
+    const allPlayers = await this.getAllPlayers();
     const lowerCaseName = name.toLowerCase();
     return (
       allPlayers.find((player) => player.name.toLowerCase() === lowerCaseName) ??
@@ -132,8 +129,8 @@ export class Player {
    * Get's Online Player data.
    * @returns {object}
    */
-  async getOnlinePlayerData(options = { server: "Nations" }) {
-    const data = await this.provider.server.getPlayerData({ server: options.server });
+  async getOnlinePlayerData() {
+    const data = await this.provider.server.getPlayerData();
     return this.Functions.editPlayerProps(data.players) ?? null;
   }
 }
