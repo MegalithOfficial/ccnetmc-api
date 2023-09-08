@@ -1,6 +1,6 @@
 {
   "name": "ccnetmc-api",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Simple Fast and efficient CCnetMC Server Dynmap Warpper. Written in Typescript.",
   "main": "lib/main.js",
   "types": "lib/main.d.ts",
