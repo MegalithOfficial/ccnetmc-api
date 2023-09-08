@@ -1,7 +1,7 @@
 {
   "name": "ccnetmc-api",
   "version": "2.0.0",
-  "description": "An NPM package to interact with the CCNetMC server, and get information from it. Written in Typescript.",
+  "description": "Simple Fast and efficient CCnetMC Server Dynmap Warpper. Written in Typescript.",
   "main": "lib/main.js",
   "types": "lib/main.d.ts",
   "scripts": {
