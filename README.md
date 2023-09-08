@@ -22,7 +22,7 @@ npm install https://github.com/MegalithOffical/ccnetmc-api
 - Lightweight an fast.
 - Optimised functions.
 - Easy to use.
-- Supports Both server (Nations and Towny)
+- Supports Nations server.
 
 
 ## Support
@@ -36,33 +36,28 @@ For support, Open PR/Issue from github.
 - [@Shadowevil015 - Old Author](https://github.com/Shadowevil015)
 
 
-
-## Documentation
-
-[Click to go Docs](https://linktodocumentation)
-
-
 ## Usage/Examples
 
 ```javascript
+// ES/Typescript
 import { CCnet } from 'ccnetmc-api';
+
+// Or CJS
+const { CCnet } = require("ccnetmc-api");
 
 const api = new CCnet();
 
 async function App() {
-  const Players = await api.player.getOnlinePlayers(true, { server: "Nations" });
+  const Players = await api.player.getOnlinePlayers(true);
   console.log(Players)
 };
 
 App();
 ```
 
-
 ## License
 
-[MIT](https://choosealicense.com/licenses/mit/)
+[Apache 2.0](https://choosealicense.com/licenses/mit/)
 
-## Credits 
-Thank to [@Shadowevil015](https://github.com/Shadowevil015) and [@Owen3H](https://github.com/Owen3H)  for their Hard work.
-Im honored to improve the Module.
-
+## Special Thanks 
+Thank to [@Shadowevil015](https://github.com/Shadowevil015) and [@Owen3H](https://github.com/Owen3H) for their inpiring Hard work.

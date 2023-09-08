@@ -1,0 +1,10 @@
+dist/Interfaces
+dist/providers
+dist/utils
+dist
+tests
+.npmrc
+.prettierrc
+.gitignore
+.github
+.vscode

@@ -1,31 +1,38 @@
 {
   "name": "ccnetmc-api",
-  "version": "1.0.4",
-  "description": "An NPM package to interact with the CCNetMC server, and get information from it.",
-  "main": "main.js",
-  "type": "module",
-  "types": "src/global.d.ts",
+  "version": "2.0.0",
+  "description": "An NPM package to interact with the CCNetMC server, and get information from it. Written in Typescript.",
+  "main": "lib/main.js",
+  "types": "lib/main.d.ts",
   "scripts": {
-    "dev": "nodemon main.js",
-    "test": "nodemon test/index.js"
+    "build": "tsc",
+    "start": "npm run build && node lib/main.js",
+    "test": "ts-node tests/test.ts"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/MegalithOffical/ccnetmc-api"
+    "url": "git+https://github.com/MegalithOffical/ccnetmc-api.git"
   },
   "keywords": [
     "ccnetmc",
     "nodejs",
     "minecraft"
   ],
-  "author": "MegalithOfficial",
-  "license": "MIT",
+  "author": "MegalithOffical",
+  "license": "Apache-2.0",
   "devDependencies": {
-    "nodemon": "^2.0.22"
+    "@types/node": "^20.5.9",
+    "typescript": "^5.2.2"
   },
   "dependencies": {
     "@sapphire/fetch": "^2.4.1",
-    "minecraft-lib": "^1.1.6",
     "striptags": "^3.2.0"
+  },
+  "bugs": {
+    "url": "https://github.com/MegalithOffical/ccnetmc-api/issues"
+  },
+  "homepage": "https://github.com/MegalithOffical/ccnetmc-api#readme",
+  "directories": {
+    "test": "tests"
   }
 }
