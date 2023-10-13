@@ -21,72 +21,33 @@ export class Towns {
     if (!mapData || !ops || !mapData.sets["towny.markerset"]) return;
 
     const townData = mapData.sets["towny.markerset"].areas;
-    const townsArray = Object.values(townData).map((town: RawTownData) => {
+    const townsArray = Object.values(townData).map((town: any) => {
 
       const rawinfo: string[] = town.desc.split("<br />");
       const info = rawinfo.map((x: string) => striptags(x));
-
-      const townName = info[1].includes("Vassal")
-        ? info[2].split(" (")[0].trim()
-        : (!info[1].includes("Vassal") && !info[1].includes("Member"))
-          ? info[1].split(" (")[0].trim()
-          : "";
-
-      const nationName = info[0].slice(10).trim();
-      const vassal = info[1].includes("Vassal");
-      const vassalOf = vassal ? info[1].split(" ")[2] : "none";
-
-      const Occupiedby = info[2].trim().split("-")[1] || "";
-      const IsOccupied = Boolean(Occupiedby);
-
-      const residents = info[12].slice(19).trim().split(", ");
-      const trusted = info[13].slice(20).trim().split(", ");
-
-      const culture = info[6].includes("Culture")
-        ? info[6].split("-")[1].trim()
-        : info[7].includes("Culture") ? info[7].split("-")[1].trim() : "none";
-
-      const board = info[6].includes("Board")
-        ? info[6].split("-")[1].trim()
-        : info[7].includes("Board") ? info[7].split("-")[1].trim() : "none";
-
-      const mayor = info[3].includes("Mayor")
-        ? info[3].split("Mayor")[1].trim().replace(" ", "").replaceAll('-', '')
-        : "";
-
-      const peacefulness = info[5].includes("Peaceful?")
-        ? info[5].split("Peaceful?")[1].trim() === "true"
-        : false;
-
-      const bank = info[8].slice(9).trim().includes("$")
-        ? info[8].slice(9).trim()
-        : 0;
-
-      const upkeep = info[9].slice(11).trim().includes("$")
-        ? info[9].slice(11).trim()
-        : 0;
+      const extractedData = Utils.extractTownData(info, ops);
 
       const currentTown: Town = {
-        isOccupied: IsOccupied,
-        occupiedBy: Occupiedby,
-        board: board,
-        culture: culture,
-        isVassal: vassal,
-        vassalOf: vassalOf,
+        isOccupied: extractedData.isOccupied,
+        occupiedBy: extractedData.occupiedBy,
+        resources: extractedData.resources,
+        board: extractedData.board,
+        culture: extractedData.culture,
+        isVassal: extractedData.isVassal,
+        vassalOf: extractedData.vassalOf,
         area: this.utils.calcPolygonArea(town.x, town.z, town.x.length) / 16 / 16,
         x: Math.round((Math.max(...town.x) + Math.min(...town.x)) / 2),
         z: Math.round((Math.max(...town.z) + Math.min(...town.z)) / 2),
-        name: this.utils.removeStyleCharacters(townName),
-        nation: this.utils.removeStyleCharacters(nationName),
-        mayor: mayor,
-        residents: residents,
-        // @ts-ignore
-        onlineResidents: ops.filter((op: object) => residents.includes(op.name)),
-        capital: info[0].includes("Capital"),
-        bank: bank,
-        upkeep: upkeep,
-        peacefulness: peacefulness,
-        trusted: trusted,
+        name: this.utils.removeStyleCharacters(extractedData.name),
+        nation: this.utils.removeStyleCharacters(extractedData.nation),
+        mayor: extractedData.mayor,
+        residents: extractedData.residents,
+        onlineResidents: extractedData.onlineResidents,
+        capital: extractedData.capital,
+        bank: extractedData.bank,
+        upkeep: extractedData.upkeep,
+        peacefulness: extractedData.peacefulness,
+        trusted: extractedData.trusted,
         colourCodes: {
           fill: town.fillcolor,
           outline: town.color,
@@ -95,7 +56,7 @@ export class Towns {
       return currentTown;
     });
 
-    const townsArrayNoDuplicates = this.utils.removeDuplicates(townsArray);
+    const townsArrayNoDuplicates = Utils.removeDuplicates(townsArray);
 
     return townsArrayNoDuplicates;
   };

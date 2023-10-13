@@ -11,6 +11,7 @@ export interface Town {
   mayor: string;
   residents: string[];
   onlineResidents: string[];
+  resources: string[];
   capital: boolean;
   bank: number | string;
   board: string;
