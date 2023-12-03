@@ -9,11 +9,6 @@ To Install Module run this command
 ```bash
 npm install ccnetmc-api
 ```
-or
-```bash
-npm install https://github.com/MegalithOffical/ccnetmc-api
-```
-
 
 ## Features
 
