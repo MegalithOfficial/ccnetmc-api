@@ -1,7 +1,7 @@
 import striptags from "striptags";
 import { Player } from "../Interfaces/PlayerProvider";
 import { DataNull, InvalidTypeData } from "./Errors";
-import { RawTownData, Town } from "../Interfaces/Town";
+import { Town } from "../Interfaces/Town";
 
 export class Utils {
 
@@ -29,10 +29,11 @@ export class Utils {
     return array.filter((a, b) => array.indexOf(a) === b);
   };
 
-  public static removeStyleCharacters(string: string): string {
-    return string.replace(/(&amp;.|&[0-9kmnola-z])/g, "");
+  public static removeStyleCharacters(string: string): string | undefined {
+    console.log(string)
+    return string.length >= 0 ? string.replace(/(&amp;.|&[0-9kmnola-z])/g, "") : "";
   };
-  
+
   public static editPlayerProps(playerObjOrArray: Player | Player[]): Player | Player[] {
     if (!playerObjOrArray) throw new DataNull({ message: "Data is null.", code: 204 });
 
@@ -62,80 +63,80 @@ export class Utils {
     return playerObjOrArray;
   };
 
-  public static extractTownData(TownRownData: any, ops: any) {
-
-    const data: Town = {
+  public static extractTownData(stringArray: any, ops: any) {
+    const obj: Partial<Town> = {
       isOccupied: false,
-      occupiedBy: "",
-      board: "",
-      culture: "",
+      occupiedBy: null,
       isVassal: false,
-      vassalOf: "",
-      area: 0,
-      x: 0,
-      z: 0,
-      name: "",
-      nation: "",
-      mayor: "",
-      residents: [],
-      resources: [],
-      onlineResidents: [],
-      capital: false,
-      bank: "",
-      upkeep: "",
-      peacefulness: true,
-      trusted: [],
-      colourCodes: {
-        fill: "",
-        outline: "",
-      },
-    };  
+      vassalOf: null,
+      nation: null
+    };
 
-    for (const line of TownRownData) {
-      
-      if (line.includes('Occupying Nation')) {
-        data.isOccupied = line.trim() !== 'Occupying Nation -';
-        data.occupiedBy = data.isOccupied ? line.replace('Occupying Nation -', '').trim() : null;
-      } else if (line.includes('Board - ')) {
-        data.board = line.replace('Board - ', '').replace(/•/g, '').trim();
-      } else if (line.includes('Culture - ')) {
-        data.culture = line.replace('Culture - ', '').replace(/•/g, '').trim(); 
-      } else if (line.includes('Vassal of ')) {
-        data.isVassal = true;
-        data.vassalOf = line.replace('Vassal of ', '').trim();
-      } else if (line.includes('Area - ')) {
-        data.area = line.replace('Area - ', '').trim();
-      } else if (line.includes('Mayor - ')) {
-        data.mayor = line.replace('Mayor - ', '').trim();
-      } else if (line.includes('Residents (')) {
-        const residentsStr = line.match(/-\s(.*?)\s*$/)[1];
-        data.residents = residentsStr.split(', ');
-      } else if (line.includes('Trusted Players - ')) {
-        const trustedPlayersStr = line.replace('Trusted Players - ', '').replace(/•/g, '').trim();
-        data.trusted = trustedPlayersStr.split(',').map((player: string) => player.trim());
-      } else if (line.includes('Member of')) {
-        data.nation = line.replace('Member of ', '').trim();
-      } else if (line.includes('Capital of')) {
-        data.nation = line.replace('Capital of ', '').trim();
-        data.capital = true;
-      } else if(line.includes("Bank -")) {
-        const parsedBank = parseFloat(Utils.formatNumber(line.split("Bank -")[1]))
-        data.bank = parsedBank
-      } else if(line.includes("Upkeep -")) { 
-        const parsedBank = parseFloat(Utils.formatNumber(line.split("Upkeep -")[1]))
-        data.upkeep = parsedBank
-      } else if(line.includes("Resources -")) {
-        const resourcesstr = line.match(/-\s(.*?)\s*$/)[1];
-        data.resources = resourcesstr.split(", ").map(item => item.trim());
-      } else if(line.includes("Peaceful?")) {
-        const match = line.match(/\btrue\b|\bfalse\b/)[0];
-        data.peacefulness = match === "true";
-      } else data.name = TownRownData[1].trim() || TownRownData[2].trim(); 
+    const keyPatterns = {
+      mayor: /Mayor:\s*(\w+)/,
+      founded: /Founded:\s*(.+)/,
+      residents: /Residents \((\d+)\): (.+)/,
+      trusted_players: /Trusted Players:\s*([\w\s,]+)$/,
+      peaceful: /Peaceful\?\s*(true|false)/i,
+      bank: /Bank:\s*\$([0-9,.]+)/,
+      upkeep: /Upkeep:\s*\$([0-9,.]+)/,
+      board: /Board:\s*(.+)/,
+      culture: /Culture:\s*(.+)/,
+      vassal_of: /Vassal of\s*(.+)/,
+      area: /Area:\s*([\d,.]+)/,
+      nation: /(Member|Capital) of\s*(.+)/,
+      occupied_by: /Occupied by\s*(.+)/,
+      resources: /Resources:\s*([\w\s,]+)/
+    };
+
+    for (const line of stringArray) {
+      for (const [key, pattern] of Object.entries(keyPatterns)) {
+        const match = line.match(pattern);
+        if (match) {
+          switch (key) {
+            case 'vassal_of':
+              obj["vassalOf"] = match[1].trim();
+              obj.isVassal = true;
+              break;
+            case 'occupied_by':
+              obj["occupiedBy"] = match[1].trim();
+              obj.isOccupied = true;
+              break;
+            case 'peaceful':
+              obj[key] = match[1].toLowerCase() === 'true';
+              break;
+            case 'bank':
+            case 'upkeep':
+              obj[key] = parseFloat(match[1].replace(/[^0-9.]+/g, ''));
+              break;
+            case 'residents':
+              obj[key] = match[2].split(', ').map(name => name.trim());
+              break;
+            case 'trusted_players':
+              obj[key] = match[1].split(', ').map(name => name.trim());
+              break;
+            case 'resources':
+              obj[key] = match[1].split(',').map(resource => resource.trim());
+              break;
+            case 'area':
+              obj[key] = parseFloat(match[1].replace(/[^0-9.]+/g, ''));
+              break;
+            case 'nation':
+              obj[key] = match[2].trim();
+              obj.capital = match[1] === 'Capital';
+              break;
+            default:
+              obj[key] = match[1];
+              break;
+          }
+          break;
+        }
+      }
     }
-  
-    data.onlineResidents = ops.filter((op: any) => data.residents.includes(op.name));  
-    if(data.vassalOf.length === 0) data.vassalOf = "none";
-  
-    return data;
+
+    obj.name = stringArray[0].trim() || stringArray[1].trim();
+    console.log(obj)
+
+    return obj as Town;
   };
 };

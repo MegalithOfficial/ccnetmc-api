@@ -1,13 +1,13 @@
 export interface Town {
   isVassal: boolean;
-  vassalOf: string;
+  vassalOf: string | null;
   isOccupied: boolean;
-  occupiedBy: string;
+  occupiedBy: string | null;
   area: number;
   x: number;
   z: number;
   name: string;
-  nation: string;
+  nation: string | null;
   mayor: string;
   residents: string[];
   onlineResidents: string[];

@@ -11,9 +11,15 @@ export interface Siege {
 };
 
 export interface NavalSiege {
-  name: string;
-  controller: string;
+  controlledBy: string;
+  location: string;
   type: string;
+  theaters: string;
+  preparationDuration: string;
+  captureDuration: string;
+  timeWindows: string[];
+  dailyPayout: string;
+  dailyItemPayout?: string[];
 };
 
 export interface RawSiegeData {

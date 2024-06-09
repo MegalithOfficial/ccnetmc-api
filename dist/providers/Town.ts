@@ -15,7 +15,7 @@ export class Towns {
     this.RequestManager = new Request();
   };
 
-  public async getAllTowns(): Promise<Town[] | undefined> {
+  public async getAllTowns(): Promise<any> {//Promise<Town[] | undefined> {
     const mapData = await this.RequestManager.getMapData();
     const ops = await this.provider.player.getOnlinePlayerData();
     if (!mapData || !ops || !mapData.sets["towny.markerset"]) return;
@@ -27,33 +27,11 @@ export class Towns {
       const info = rawinfo.map((x: string) => striptags(x));
       const extractedData = Utils.extractTownData(info, ops);
 
-      const currentTown: Town = {
-        isOccupied: extractedData.isOccupied,
-        occupiedBy: extractedData.occupiedBy,
-        resources: extractedData.resources,
-        board: extractedData.board,
-        culture: extractedData.culture,
-        isVassal: extractedData.isVassal,
-        vassalOf: extractedData.vassalOf,
-        area: this.utils.calcPolygonArea(town.x, town.z, town.x.length) / 16 / 16,
-        x: Math.round((Math.max(...town.x) + Math.min(...town.x)) / 2),
-        z: Math.round((Math.max(...town.z) + Math.min(...town.z)) / 2),
-        name: this.utils.removeStyleCharacters(extractedData.name),
-        nation: this.utils.removeStyleCharacters(extractedData.nation),
-        mayor: extractedData.mayor,
-        residents: extractedData.residents,
-        onlineResidents: extractedData.onlineResidents,
-        capital: extractedData.capital,
-        bank: extractedData.bank,
-        upkeep: extractedData.upkeep,
-        peacefulness: extractedData.peacefulness,
-        trusted: extractedData.trusted,
-        colourCodes: {
-          fill: town.fillcolor,
-          outline: town.color,
-        },
-      };
-      return currentTown;
+      extractedData.x = Math.round((Math.max(...town.x) + Math.min(...town.x)) / 2);
+      extractedData.z = Math.round((Math.max(...town.z) + Math.min(...town.z)) / 2);
+      extractedData.area = this.utils.calcPolygonArea(town.x, town.z, town.x.length) / 16 / 16;
+
+      return extractedData;
     });
 
     const townsArrayNoDuplicates = Utils.removeDuplicates(townsArray);

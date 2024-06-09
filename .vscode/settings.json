@@ -4,6 +4,6 @@
     "editor.cursorStyle": "line",
     "editor.cursorSmoothCaretAnimation": "on",
     "editor.cursorBlinking": "blink",
-    "editor.wordBasedSuggestions": true,
+    "editor.wordBasedSuggestions": "matchingDocuments",
     "terminal.integrated.scrollback": 50000,
 }
