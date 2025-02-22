@@ -9,3 +9,4 @@ tests
 .github
 .vscode
 CHANGELOG.md
+tsconfig.json
