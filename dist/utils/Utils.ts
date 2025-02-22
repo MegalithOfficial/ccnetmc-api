@@ -63,80 +63,102 @@ export class Utils {
     return playerObjOrArray;
   };
 
-  public static extractTownData(stringArray: any, ops: any) {
-    const obj: Partial<Town> = {
+  public static extractTownData(stringArray: string[], ops: any): Town {
+    if (!Array.isArray(stringArray) || stringArray.length === 0) {
+      throw new DataNull({ message: "Invalid town data array", code: 204 });
+    }
+
+    const patterns = new Map([
+      ['mayor', { regex: /Mayor:\s*(\w+)/ }],
+      ['founded', { regex: /Founded:\s*(.+)/ }],
+      ['residents', { 
+        regex: /Residents \((\d+)\): (.+)/, 
+        transform: (m: string[]) => m[2].split(', ')
+      }],
+      ['trusted_players', { 
+        regex: /Trusted Players:\s*([\w\s,]+)$/,
+        transform: (m: string[]) => m[1].split(', ')
+      }],
+      ['peaceful', { 
+        regex: /Peaceful\?\s*(true|false)/i,
+        transform: (m: string[]) => m[1].toLowerCase() === 'true'
+      }],
+      ['bank', { 
+        regex: /Bank:\s*\$([0-9,.]+)/,
+        transform: (m: string[]) => +m[1].replace(/[^0-9.]/g, '')
+      }],
+      ['upkeep', { 
+        regex: /Upkeep:\s*\$([0-9,.]+)/,
+        transform: (m: string[]) => +m[1].replace(/[^0-9.]/g, '')
+      }],
+      ['board', { regex: /Board:\s*(.+)/ }],
+      ['culture', { regex: /Culture:\s*(.+)/ }],
+      ['area', { 
+        regex: /Area:\s*([\d,.]+)/,
+        transform: (m: string[]) => +m[1].replace(/[^0-9.]/g, '')
+      }],
+      ['resources', { 
+        regex: /Resources:\s*([\w\s,]+)/,
+        transform: (m: string[]) => m[1].split(',').map(r => r.trim())
+      }]
+    ]);
+
+    // Initialize town data
+    const townData: Partial<Town> = {
       isOccupied: false,
       occupiedBy: null,
       isVassal: false,
       vassalOf: null,
-      nation: null
+      nation: null,
+      name: stringArray[0]?.trim() || stringArray[1]?.trim() || ''
     };
 
-    const keyPatterns = {
-      mayor: /Mayor:\s*(\w+)/,
-      founded: /Founded:\s*(.+)/,
-      residents: /Residents \((\d+)\): (.+)/,
-      trusted_players: /Trusted Players:\s*([\w\s,]+)$/,
-      peaceful: /Peaceful\?\s*(true|false)/i,
-      bank: /Bank:\s*\$([0-9,.]+)/,
-      upkeep: /Upkeep:\s*\$([0-9,.]+)/,
-      board: /Board:\s*(.+)/,
-      culture: /Culture:\s*(.+)/,
-      vassal_of: /Vassal of\s*(.+)/,
-      area: /Area:\s*([\d,.]+)/,
-      nation: /(Member|Capital) of\s*(.+)/,
-      occupied_by: /Occupied by\s*(.+)/,
-      resources: /Resources:\s*([\w\s,]+)/
-    };
+    const specialPatterns = [
+      {
+        regex: /(Member|Capital) of\s*(.+)/,
+        handler: (match: RegExpMatchArray) => {
+          townData.nation = match[2].trim();
+          townData.capital = match[1] === 'Capital';
+        }
+      },
+      {
+        regex: /Vassal of\s*(.+)/,
+        handler: (match: RegExpMatchArray) => {
+          townData.vassalOf = match[1].trim();
+          townData.isVassal = true;
+        }
+      },
+      {
+        regex: /Occupied by\s*(.+)/,
+        handler: (match: RegExpMatchArray) => {
+          townData.occupiedBy = match[1].trim();
+          townData.isOccupied = true;
+        }
+      }
+    ];
 
     for (const line of stringArray) {
-      for (const [key, pattern] of Object.entries(keyPatterns)) {
-        const match = line.match(pattern);
+      let matched = false;
+      for (const { regex, handler } of specialPatterns) {
+        const match = line.match(regex);
         if (match) {
-          switch (key) {
-            case 'vassal_of':
-              obj["vassalOf"] = match[1].trim();
-              obj.isVassal = true;
-              break;
-            case 'occupied_by':
-              obj["occupiedBy"] = match[1].trim();
-              obj.isOccupied = true;
-              break;
-            case 'peaceful':
-              obj[key] = match[1].toLowerCase() === 'true';
-              break;
-            case 'bank':
-            case 'upkeep':
-              obj[key] = parseFloat(match[1].replace(/[^0-9.]+/g, ''));
-              break;
-            case 'residents':
-              obj[key] = match[2].split(', ').map(name => name.trim());
-              break;
-            case 'trusted_players':
-              obj[key] = match[1].split(', ').map(name => name.trim());
-              break;
-            case 'resources':
-              obj[key] = match[1].split(',').map(resource => resource.trim());
-              break;
-            case 'area':
-              obj[key] = parseFloat(match[1].replace(/[^0-9.]+/g, ''));
-              break;
-            case 'nation':
-              obj[key] = match[2].trim();
-              obj.capital = match[1] === 'Capital';
-              break;
-            default:
-              obj[key] = match[1];
-              break;
-          }
+          handler(match);
+          matched = true;
+          break;
+        }
+      }
+      if (matched) continue;
+
+      // Check regular patterns
+      for (const [key, { regex, transform }] of patterns) {
+        const match = line.match(regex);
+        if (match) {
+          townData[key as keyof Town] = (transform ? transform(match) : match[1]) as any;
           break;
         }
       }
     }
 
-    obj.name = stringArray[0].trim() || stringArray[1].trim();
-    console.log(obj)
-
-    return obj as Town;
+    return townData as Town;
   };
 };
