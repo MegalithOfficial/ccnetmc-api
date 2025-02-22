@@ -39,7 +39,13 @@ export class Utils {
 
     const editPlayer = (player: any) => {
       player.isUnderground = player.world === "-some-other-bogus-world-";
-      player.nickname = striptags(player.name);
+      
+      // Clean nickname and rank from HTML tags
+      const cleanName = striptags(player.name);
+      const rankMatch = cleanName.match(/\[(.*?)\]/);
+      player.rank = rankMatch ? rankMatch[1] : "None";
+      player.nickname = cleanName.replace(/\[.*?\]\s*/, '').trim();
+      
       player.name = player.account;
 
       ["account", "world", "sort", "armor", "health", "type"].forEach(
@@ -49,12 +55,8 @@ export class Utils {
 
     if (Array.isArray(playerObjOrArray)) {
       if (playerObjOrArray.length === 0) return playerObjOrArray;
-
       playerObjOrArray.forEach(editPlayer);
-    } else if (
-      typeof playerObjOrArray === "object" &&
-      Object.keys(playerObjOrArray).length > 0
-    ) {
+    } else if (typeof playerObjOrArray === "object" && Object.keys(playerObjOrArray).length > 0) {
       editPlayer(playerObjOrArray as Player);
     } else {
       throw new InvalidTypeData({ message: "Data type is Invalid. Expected data type: Player or Player[]", code: 404 });
@@ -68,7 +70,7 @@ export class Utils {
       throw new DataNull({ message: "Invalid town data array", code: 204 });
     }
 
-    const patterns = new Map([
+    const patterns = new Map<string, { regex: RegExp, transform?: (match: RegExpMatchArray) => any }>([
       ['mayor', { regex: /Mayor:\s*(\w+)/ }],
       ['founded', { regex: /Founded:\s*(.+)/ }],
       ['residents', { 
@@ -115,10 +117,10 @@ export class Utils {
 
     const specialPatterns = [
       {
-        regex: /(Member|Capital) of\s*(.+)/,
+        regex: /^(?:Member|Capital) of (.+)$/m,
         handler: (match: RegExpMatchArray) => {
-          townData.nation = match[2].trim();
-          townData.capital = match[1] === 'Capital';
+          townData.nation = match[1].trim();
+          townData.capital = match[0].startsWith('Capital');
         }
       },
       {
@@ -138,9 +140,12 @@ export class Utils {
     ];
 
     for (const line of stringArray) {
+      const cleanLine = striptags(line).replace(/[•&#;]|&#x[0-9a-f]+;/gi, '').trim();
+      if (!cleanLine) continue;
+      
       let matched = false;
       for (const { regex, handler } of specialPatterns) {
-        const match = line.match(regex);
+        const match = cleanLine.match(regex);
         if (match) {
           handler(match);
           matched = true;
@@ -151,7 +156,7 @@ export class Utils {
 
       // Check regular patterns
       for (const [key, { regex, transform }] of patterns) {
-        const match = line.match(regex);
+        const match = cleanLine.match(regex);
         if (match) {
           townData[key as keyof Town] = (transform ? transform(match) : match[1]) as any;
           break;

@@ -1,14 +1,18 @@
 export interface Siege {
-  name: string;
+  attacker: string;
+  defender: string;
   town: string;
-  type: string;
-  points: string;
-  time: string;
-  warchest: string;
-  x: number;
-  y: number;
-  z: number;
-};
+  points: {
+    attacker: number;
+    defender: number;
+  };
+  timeLeft: string;
+  location: {
+    x: number;
+    y: number;
+    z: number;
+  };
+}
 
 export interface NavalSiege {
   controlledBy: string;
@@ -40,5 +44,24 @@ export interface RawNavalSiegeData {
     x: number;
     y: number;
     z: number;
+  };
+}
+
+export interface SiegeRegion {
+  id: string;
+  name: string;
+  controlledBy: string;
+  type: string;
+  theaters?: string[];
+  preparationDuration: string;
+  captureDuration: string;
+  timeWindows: string[];
+  dailyPayout: string;
+  dailyItemPayout?: string[];
+  corners: {
+    topLeft: { x: number, z: number };
+    topRight: { x: number, z: number };
+    bottomRight: { x: number, z: number };
+    bottomLeft: { x: number, z: number };
   };
 }

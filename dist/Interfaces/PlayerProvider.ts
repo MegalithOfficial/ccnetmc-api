@@ -4,6 +4,18 @@ export interface PlayerData {
   players: Player[];
 };
 
+export interface MergedPlayer {
+  name: string;
+  isUnderground: boolean;
+  nickname: string;
+  rank: string;
+  town: string;
+  nation: string;
+  online: boolean;
+  account?: string;
+  world?: string;
+}
+
 export interface RawPlayer {
   world: string;
   armor: number;
@@ -23,4 +35,5 @@ export interface Player {
   world: string;
   isUnderground: boolean;
   nickname: string;
+  rank: string;
 };
