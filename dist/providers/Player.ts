@@ -1,4 +1,4 @@
-import { PlayerData, ProviderOptions, Player as player, ResidentData } from "../Interfaces/export";
+import { PlayerData, ProviderOptions, Player as PlayerType, ResidentData, MergedPlayer, Player as PlayerInterface } from "../Interfaces/export";
 import { FetchError, InvalidPlayer, InvalidTypeData, NoPlayerInput } from "../utils/Errors";
 import { Utils } from "../utils/Utils";
 import { CCnet } from "../main";
@@ -6,98 +6,163 @@ import { CCnet } from "../main";
 export class Player {
   private utils = Utils;
   private provider: CCnet;
+  private playerCache: Map<string, { data: any, timestamp: number }> = new Map();
+  private readonly CACHE_DURATION = 10000; // 10 seconds for player data
 
   constructor(options: ProviderOptions) {
     this.provider = options.provider;
-  };
+  }
 
-  public async getOnlinePlayers(includeResidentInfo = true): Promise<(player | player[]) | PlayerData | (PlayerData | ResidentData)[]> {
-
-    if(typeof includeResidentInfo !== 'boolean') throw new InvalidTypeData({ message: "includeResidentInfo must be a boolean.", code: 404 });
-
-    const onlinePlayers = await this.getOnlinePlayerData();
-    if (!includeResidentInfo) {
-      return onlinePlayers;
+  private getCachedData(key: string): any | null {
+    const cached = this.playerCache.get(key);
+    if (cached && Date.now() - cached.timestamp < this.CACHE_DURATION) {
+      return cached.data;
     }
-  
-    const residents = await this.getResidents();
-    if (!residents) {
-      return [];
-    }
-  
-    //@ts-ignore
-    const merged: PlayerData[] = onlinePlayers.map((player) => {
-      const resident = residents.find((resident) => resident.name === player.name);
-      return {
-        ...player,
-        ...resident,
-      };
+    return null;
+  }
+
+  private setCachedData(key: string, data: any): void {
+    this.playerCache.set(key, {
+      data,
+      timestamp: Date.now()
     });
-  
-    return merged;
-  };
+  }
+
+  public async getOnlinePlayers(includeResidentInfo = true): Promise<PlayerInterface[] | MergedPlayer[]> {
+    if (typeof includeResidentInfo !== 'boolean') {
+      throw new InvalidTypeData({ message: "includeResidentInfo must be a boolean.", code: 404 });
+    }
+
+    const cacheKey = `onlinePlayers_${includeResidentInfo}`;
+    const cached = this.getCachedData(cacheKey);
+    if (cached) return cached;
+
+    try {
+      const onlinePlayers = await this.getOnlinePlayerData();
+      if (!includeResidentInfo) {
+        this.setCachedData(cacheKey, onlinePlayers);
+        return onlinePlayers;
+      }
+
+      const residents = await this.getResidents();
+      if (!residents?.length) return [];
+
+      const merged = onlinePlayers.map(player => {
+        const resident = residents.find(r => r.name.toLowerCase() === player.name.toLowerCase());
+        return {
+          ...player,
+          ...(resident || {
+            town: "None",
+            nation: "None",
+            rank: "Visitor"
+          })
+        };
+      });
+
+      this.setCachedData(cacheKey, merged);
+      return merged;
+    } catch (error) {
+      throw new FetchError({ 
+        message: "Failed to fetch player data", 
+        code: 500 
+      });
+    }
+  }
 
   public async getResidents(): Promise<ResidentData[]> {
-    const towns = await this.provider.towns.getAllTowns();
-    if (!towns) {
-      return [];
-    };
+    const cached = this.getCachedData('residents');
+    if (cached) return cached;
 
-    const residentsArray = towns.flatMap((town) =>
-      town.residents.map((resident) => ({
+    const towns = await this.provider.towns.getAllTowns();
+    if (!towns?.length) return [];
+
+    const residents = towns.flatMap(town => 
+      town.residents.map(resident => ({
         name: resident,
         town: town.name,
-        nation: town.nation,
-        rank:
-          town.capital && town.mayor === resident
-            ? "Nation Leader"
-            : town.mayor === resident
-            ? "Mayor"
-            : "Resident",
+        nation: town.nation || "No Nation",
+        rank: this.determineResidentRank(resident, town)
       }))
     );
 
-    return residentsArray;
+    this.setCachedData('residents', residents);
+    return residents;
   }
 
-  public async getPlayer(name: string): Promise<PlayerData> {
+  private determineResidentRank(resident: string, town: any): string {
+    if (town.capital && town.mayor === resident) return "Nation Leader";
+    if (town.mayor === resident) return "Mayor";
+    if (town.trusted?.includes(resident)) return "Trusted";
+    return "Resident";
+  }
 
-    if (!name) throw new NoPlayerInput({ message: "No Player name provided.", code: 404 });
-    else if (typeof name !== "string") throw new InvalidPlayer({ message: "Player name must be a string.", code: 415 });
-    
-    const ops = await this.getOnlinePlayers(true);
-    if (!ops) throw new FetchError({ message: "Failed to fetch data.", code: 500 });
-    
-    const lowerCaseName = name.toLowerCase();
-    //@ts-ignore
-    const foundPlayer = ops.find((op) => op.name.toLowerCase() === lowerCaseName);
-
-    if (!foundPlayer) throw new InvalidPlayer({ message: "Player doesn't exist or is offline.", code: 404 });
-
-    return foundPlayer;
-  };
-  
-  public async getAllPlayers(): Promise<PlayerData[] | null> {
-    const [onlinePlayers, residents] = await Promise.all([
-      this.getOnlinePlayerData(),
-      this.getResidents(),
-    ]);
-
-    if (!onlinePlayers || !residents) {
-      return null;
+  public async getPlayer(name: string): Promise<MergedPlayer> {
+    if (!name) {
+      throw new NoPlayerInput({ message: "No Player name provided.", code: 404 });
+    }
+    if (typeof name !== "string") {
+      throw new InvalidPlayer({ message: "Player name must be a string.", code: 415 });
     }
 
-    const merged = residents.map((resident) => ({
-      ...resident,
-      //@ts-ignore
-      ...onlinePlayers.find((player) => player.name === resident.name),
-    }));
+    const cacheKey = `player_${name.toLowerCase()}`;
+    const cached = this.getCachedData(cacheKey);
+    if (cached) return cached;
 
-    return merged;
-  };
+    const players = await this.getOnlinePlayers(true) as MergedPlayer[];
+    if (!players?.length) {
+      throw new FetchError({ message: "Failed to fetch data.", code: 500 });
+    }
 
-  public async getOnlinePlayerData(): Promise<player | player[]> {
+    const player = players.find(p => p.name.toLowerCase() === name.toLowerCase());
+    if (!player) {
+      throw new InvalidPlayer({ message: "Player doesn't exist or is offline.", code: 404 });
+    }
+
+    this.setCachedData(cacheKey, player);
+    return player;
+  }
+
+  public async getAllPlayers(): Promise<MergedPlayer[]> {
+    const cached = this.getCachedData('allPlayers');
+    if (cached) return cached;
+
+    try {
+      const [onlinePlayers, residents] = await Promise.all([
+        this.getOnlinePlayerData(),
+        this.getResidents()
+      ]);
+
+      if (!residents?.length) return [];
+
+      const merged = residents.map(resident => ({
+        name: resident.name,
+        isUnderground: false,
+        nickname: resident.name,
+        town: resident.town,
+        nation: resident.nation,
+        rank: resident.rank,
+        online: !!onlinePlayers.find(p => p.name.toLowerCase() === resident.name.toLowerCase()),
+        ...onlinePlayers.find(p => p.name.toLowerCase() === resident.name.toLowerCase())
+      }));
+
+      this.setCachedData('allPlayers', merged);
+      return merged;
+    } catch (error) {
+      throw new FetchError({ message: "Failed to fetch all players", code: 500 });
+    }
+  }
+
+  public async getOnlinePlayerData(): Promise<PlayerType[]> {
+    const cached = this.getCachedData('onlinePlayerData');
+    if (cached) return cached;
+
     const data = await this.provider.server.getPlayerData();
-    return this.utils.editPlayerProps(data.players) ?? null;
-  };
-};
+    if (!data?.players) {
+      throw new FetchError({ message: "Failed to fetch player data", code: 500 });
+    }
+
+    const players = this.utils.editPlayerProps(data.players) as PlayerType[];
+    this.setCachedData('onlinePlayerData', players);
+    return players;
+  }
+}
