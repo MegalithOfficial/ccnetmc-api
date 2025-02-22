@@ -8,3 +8,4 @@ tests
 .gitignore
 .github
 .vscode
+CHANGELOG.md

@@ -48,6 +48,24 @@ async function App() {
 App();
 ```
 
+# Changelog
+
+## [2.1.0] - 2025-02-22
+
+### Added
+- New test suite with separate test files for each provider
+- Comprehensive caching mechanism for providers
+- Enhanced parsing and data validation
+- Server status provider with detailed monitoring
+
+### Changed
+- Refactored Player, Towns, Nations, Sieges providers with improved caching and type safety
+- Optimized Towns provider with better performance and code cleanup
+- Enhanced Nations provider with caching and performance improvements
+- Updated RequestManager with robust caching and error handling
+- Improved extractTownData method with better parsing and type safety
+
+
 ## License
 
 [Apache 2.0](https://choosealicense.com/licenses/mit/)
