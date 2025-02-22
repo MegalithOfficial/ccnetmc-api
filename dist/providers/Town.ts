@@ -9,73 +9,119 @@ export class Towns {
   private utils = Utils;
   private provider: CCnet;
   private RequestManager: Request;
+  private townsCache: Map<string, { data: Town[], timestamp: number }> = new Map();
+  private readonly CACHE_DURATION = 30000; // 30 seconds cache
 
   constructor(options: ProviderOptions) {
     this.provider = options.provider;
     this.RequestManager = new Request();
-  };
+  }
 
-  public async getAllTowns(): Promise<any> {//Promise<Town[] | undefined> {
-    const mapData = await this.RequestManager.getMapData();
-    const ops = await this.provider.player.getOnlinePlayerData();
-    if (!mapData || !ops || !mapData.sets["towny.markerset"]) return;
+  private getCachedTowns(): Town[] | null {
+    const cached = this.townsCache.get('towns');
+    if (cached && Date.now() - cached.timestamp < this.CACHE_DURATION) {
+      return cached.data;
+    }
+    return null;
+  }
+
+  private setCachedTowns(towns: Town[]): void {
+    this.townsCache.set('towns', {
+      data: towns,
+      timestamp: Date.now()
+    });
+  }
+
+  private processTownData(rawTown: any, ops: any): Town {
+    const rawInfo: string[] = rawTown.desc.split("<br />");
+    const info = rawInfo.map((x: string) => striptags(x));
+    const extractedData = Utils.extractTownData(info, ops);
+
+    // Calculate coordinates and area
+    const xCoords = rawTown.x;
+    const zCoords = rawTown.z;
+    
+    extractedData.x = Math.round((Math.max(...xCoords) + Math.min(...xCoords)) / 2);
+    extractedData.z = Math.round((Math.max(...zCoords) + Math.min(...zCoords)) / 2);
+    extractedData.area = this.utils.calcPolygonArea(xCoords, zCoords, xCoords.length) / 256; // 16 * 16 = 256
+
+    return extractedData;
+  }
+
+  public async getAllTowns(): Promise<Town[]> {
+    // Check cache first
+    const cached = this.getCachedTowns();
+    if (cached) return cached;
+
+    // Fetch required data
+    const [mapData, ops] = await Promise.all([
+      this.RequestManager.getMapData(),
+      this.provider.player.getOnlinePlayerData()
+    ]);
+
+    if (!mapData?.sets?.["towny.markerset"]?.areas) {
+      throw new DataNull({ message: "Town data is unavailable", code: 404 });
+    }
 
     const townData = mapData.sets["towny.markerset"].areas;
-    const townsArray = Object.values(townData).map((town: any) => {
 
-      const rawinfo: string[] = town.desc.split("<br />");
-      const info = rawinfo.map((x: string) => striptags(x));
-      const extractedData = Utils.extractTownData(info, ops);
+    // Process towns in chunks to avoid blocking
+    const CHUNK_SIZE = 50;
+    const towns: Town[] = [];
+    const townEntries = Object.entries(townData);
 
-      extractedData.x = Math.round((Math.max(...town.x) + Math.min(...town.x)) / 2);
-      extractedData.z = Math.round((Math.max(...town.z) + Math.min(...town.z)) / 2);
-      extractedData.area = this.utils.calcPolygonArea(town.x, town.z, town.x.length) / 16 / 16;
+    for (let i = 0; i < townEntries.length; i += CHUNK_SIZE) {
+      const chunk = townEntries.slice(i, i + CHUNK_SIZE);
+      const processedTowns = chunk.map(([_, town]) => this.processTownData(town, ops));
+      towns.push(...processedTowns);
+    }
 
-      return extractedData;
-    });
-
-    const townsArrayNoDuplicates = Utils.removeDuplicates(townsArray);
-
-    return townsArrayNoDuplicates;
-  };
+    // Remove duplicates and cache
+    const uniqueTowns = this.utils.removeDuplicates(towns);
+    this.setCachedTowns(uniqueTowns);
+    return uniqueTowns;
+  }
 
   public async getTown(name: string): Promise<Town | null> {
-    if (typeof name !== 'string') throw new InvalidTypeData({ message: "Name must be a string.", code: 404 });
-    if (name.length === 0) throw new InvalidTypeData({ message: "Name cannot be empty.", code: 204 });
+    if (typeof name !== 'string') {
+      throw new InvalidTypeData({ message: "Name must be a string.", code: 404 });
+    }
+    if (name.length === 0) {
+      throw new InvalidTypeData({ message: "Name cannot be empty.", code: 204 });
+    }
 
-    let towns = await this.getAllTowns();
-    return (
-      towns?.find((town) => town.name.toLowerCase() === name.toLowerCase()) ??
-      null
-    );
-  };
+    const nameLower = name.toLowerCase();
+    const towns = await this.getAllTowns();
+    return towns?.find(town => town.name.toLowerCase() === nameLower) ?? null;
+  }
+
+  public async getInvitableTowns(nationName: string, includeBelonging: boolean): Promise<Town[] | null> {
+    if (typeof nationName !== 'string') {
+      throw new InvalidTypeData({ message: "Name must be a string.", code: 404 });
+    }
+    if (nationName.length === 0) {
+      throw new InvalidTypeData({ message: "Name cannot be empty.", code: 204 });
+    }
+    if (typeof includeBelonging !== 'boolean') {
+      throw new InvalidTypeData({ message: "includeBelonging must be a boolean.", code: 404 });
+    }
+
+    const nation = await this.provider.nations.getNation(nationName);
+    if (!nation) {
+      throw new DataNull({ message: `Nation ${nationName} does not exist!`, code: 404 });
+    }
+
+    const towns = await this.getAllTowns();
+    if (!towns?.length) return null;
+
+    return towns.filter(town => this.invitable(town, nation, includeBelonging));
+  }
 
   private invitable(town: Town, nation: Nation, includeBelonging: boolean): boolean {
-    const distance = Math.hypot(
-      town.x - nation.capitalX,
-      town.z - nation.capitalZ
-    );
+    const distance = Math.hypot(town.x - nation.capitalX, town.z - nation.capitalZ);
     const differentNation = town.nation !== nation.name;
     const noNation = town.nation === "No Nation";
-    return (
-      distance <= 3000 && differentNation && (includeBelonging || noNation)
-    );
-  };
-
-  async getInvitableTowns(name: string, includeBelonging: boolean): Promise<Town[] | null> {
-    if (typeof name !== 'string') throw new InvalidTypeData({ message: "Name must be a string.", code: 404 });
-    if (name.length === 0) throw new InvalidTypeData({ message: "Name cannot be empty.", code: 204 });
-
-    if (typeof includeBelonging !== 'boolean') throw new InvalidTypeData({ message: "includeBelonging must be a boolean.", code: 404 });
-
-    let nation = await this.provider.nations.getNation(name);
-    if (nation !== null) {
-      let towns = await this.getAllTowns();
-      if (!towns) return null;
-
-      return towns.filter((town) =>
-        this.invitable(town, nation as Nation, includeBelonging)
-      );
-    } else throw new DataNull({ message: `Nation ${nation} does not exist!`, code: 404 });
-  };
-};
+    
+    return distance <= 3000 && differentNation && (includeBelonging || noNation);
+  }
+}

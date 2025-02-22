@@ -58,7 +58,7 @@ export class Nations {
       const chunk = towns.slice(i, i + CHUNK_SIZE);
       
       for (const town of chunk) {
-        if (town.nation === "No Nation") continue;
+        if (!town.nation || town.nation === "No Nation") continue;
 
         let nation = nationsMap.get(town.nation);
         if (!nation) {
