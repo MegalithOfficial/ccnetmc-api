@@ -9,6 +9,7 @@ export class Sieges {
   private provider: CCnet;
   private RequestManager: Request;
   private siegesCache: Map<string, { data: Siege[], timestamp: number }> = new Map();
+  private siegeRegionsCache: Map<string, { data: SiegeRegion[], timestamp: number }> = new Map();
   private readonly CACHE_DURATION = 30000; // 30 seconds cache
 
   constructor(options: ProviderOptions) {
@@ -29,6 +30,21 @@ export class Sieges {
       data: sieges,
       timestamp: Date.now()
     });
+  }
+
+  private setCachedRegions(regions: SiegeRegion[]): void {
+    this.siegeRegionsCache.set('siegeRegions', {
+      data: regions,
+      timestamp: Date.now()
+    });
+  }
+
+  private getCachedRegions(): SiegeRegion[] | null {
+    const cached = this.siegeRegionsCache.get('siegeRegions');
+    if (cached && Date.now() - cached.timestamp < this.CACHE_DURATION) {
+      return cached.data;
+    }
+    return null;
   }
 
   public async getAllSieges(): Promise<Siege[]> {
@@ -82,6 +98,9 @@ export class Sieges {
   };
 
   public async getAllSiegeRegions(): Promise<SiegeRegion[]> {
+    const cached = this.getCachedRegions();
+    if (cached) return cached;
+
     const mapData = await this.RequestManager.getMapData();
     if (!mapData?.sets['nationswarfare.markerset']?.areas) return [];
 
@@ -157,6 +176,7 @@ export class Sieges {
       });
     }
 
+    this.setCachedRegions(regions);
     return regions;
   }
 };
