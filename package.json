@@ -7,7 +7,10 @@
   "scripts": {
     "build": "tsc",
     "start": "npm run build && node lib/main.js",
-    "test": "ts-node tests/test.ts"
+    "test": "npm run test:nations && npm run test:towns && npm run test:players",
+    "test:nations": "bun run tests/nations.test.ts",
+    "test:towns": "bun run tests/towns.test.ts",
+    "test:players": "bun run tests/players.test.ts"
   },
   "repository": {
     "type": "git",
