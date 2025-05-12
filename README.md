@@ -1,3 +1,8 @@
+# Deprecation Notice for ccnetmc-api
+Hello everyone,
+
+After careful consideration, I’ve decided to officially deprecate the ccnetmc-api package. Unfortunately, the underlying CCNetMC “Nations” API endpoints that this library relies on have been permanently closed, and without them, the package can no longer function as intended.
+
 # CCnetmc-api NPM Package
 
 Easy to Use, fast and lightweight CCnet Minecraft server API warpper.
